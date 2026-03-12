@@ -1,26 +1,107 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================
+   Orendt Studios — Brand Guideline Tokens
+   ============================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fonts */
+  --font-display: var(--font-sora);
+  --font-body: var(--font-instrument-sans);
+
+  /* Colors — Core */
+  --color-orendt-black: #0A0A0A;
+  --color-orendt-dark: #1A1A1A;
+  --color-orendt-white: #FFFFFF;
+  --color-orendt-accent: #E8FF00;
+  --color-orendt-accent-hover: #D4EB00;
+
+  /* Colors — Gray Scale */
+  --color-gray-50: #FAFAFA;
+  --color-gray-100: #F5F5F5;
+  --color-gray-200: #EEEEEE;
+  --color-gray-300: #DDDDDD;
+  --color-gray-400: #BBBBBB;
+  --color-gray-500: #999999;
+  --color-gray-600: #777777;
+  --color-gray-700: #555555;
+  --color-gray-800: #333333;
+  --color-gray-900: #222222;
+
+  /* Colors — Status */
+  --color-status-free: #22C55E;
+  --color-status-free-bg: #F0FDF4;
+  --color-status-reserved: #F59E0B;
+  --color-status-reserved-bg: #FFFBEB;
+  --color-status-occupied: #EF4444;
+  --color-status-occupied-bg: #FEF2F2;
+  --color-status-released: #3B82F6;
+  --color-status-released-bg: #EFF6FF;
+
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12);
+
+  /* Animations */
+  --animate-fade-in: fadeIn 0.4s ease forwards;
+  --animate-slide-up: slideUp 0.4s ease forwards;
+  --animate-scale-in: scaleIn 0.5s ease forwards;
+  --animate-pulse-soft: pulseSoft 2s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ============================================
+   Global Styles
+   ============================================ */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-gray-50);
+  color: var(--color-orendt-black);
+  font-family: var(--font-body), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus Ring — Accent Color */
+*:focus-visible {
+  outline: 2px solid var(--color-orendt-accent);
+  outline-offset: 2px;
+}
+
+/* Selection — Accent */
+::selection {
+  background: var(--color-orendt-accent);
+  color: var(--color-orendt-black);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
