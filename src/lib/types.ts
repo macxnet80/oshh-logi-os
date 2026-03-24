@@ -5,6 +5,15 @@ export type AbsenceType =
   | "sick"
   | "home_office";
 
+/** Profilzeilen für Nutzer mit Logi-App-Zugang (`logi_user_access`), Abwesenheitsplaner. */
+export interface PlannerMember {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url: string | null;
+}
+
+/** Legacy-Mock / alte Stammdaten (nicht mehr für den Planer genutzt). */
 export interface Employee {
   id: string;
   email: string;
@@ -16,7 +25,7 @@ export interface Employee {
 
 export interface Absence {
   id: string;
-  employee_id: string;
+  profile_id: string;
   type: AbsenceType;
   start_date: string;
   end_date: string;
@@ -24,8 +33,8 @@ export interface Absence {
   created_at: string | null;
 }
 
-export interface AbsenceWithEmployee extends Absence {
-  employee: Employee;
+export interface AbsenceWithMember extends Absence {
+  member: PlannerMember;
 }
 
 // Absence type display config

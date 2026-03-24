@@ -11,12 +11,12 @@ import {
   getMonthName,
   getDayNameShort,
 } from "@/lib/calendar";
-import { ABSENCE_CONFIG, type Employee, type Absence } from "@/lib/types";
+import { ABSENCE_CONFIG, type PlannerMember, type Absence } from "@/lib/types";
 
 interface AbsenceCalendarProps {
   year: number;
   month: number;
-  employees: Employee[];
+  teamMembers: PlannerMember[];
   absences: Absence[];
   onPrevMonth: () => void;
   onNextMonth: () => void;
@@ -26,7 +26,7 @@ interface AbsenceCalendarProps {
 export default function AbsenceCalendar({
   year,
   month,
-  employees,
+  teamMembers,
   absences,
   onPrevMonth,
   onNextMonth,
@@ -34,17 +34,17 @@ export default function AbsenceCalendar({
 }: AbsenceCalendarProps) {
   const days = useMemo(() => getDaysInMonth(year, month), [year, month]);
 
-  // Build a lookup: employeeId -> date -> absenceType
+  // Build a lookup: profileId -> date -> absenceType
   const absenceMap = useMemo(() => {
     const map: Record<string, Record<string, Absence>> = {};
     for (const absence of absences) {
-      if (!map[absence.employee_id]) {
-        map[absence.employee_id] = {};
+      if (!map[absence.profile_id]) {
+        map[absence.profile_id] = {};
       }
       // Fill each day in range
       for (const day of days) {
         if (isDateInRange(day, absence.start_date, absence.end_date)) {
-          map[absence.employee_id][formatDate(day)] = absence;
+          map[absence.profile_id][formatDate(day)] = absence;
         }
       }
     }
@@ -87,7 +87,7 @@ export default function AbsenceCalendar({
         <table className="w-full border-collapse min-w-[800px]">
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-gray-50 px-4 py-2 text-left font-body text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[160px]">
+              <th className="sticky left-0 z-10 bg-gray-50 px-4 py-2 text-left font-body text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[200px] max-w-[200px]">
                 Mitarbeiter
               </th>
               {days.map((day) => {
@@ -119,33 +119,28 @@ export default function AbsenceCalendar({
             </tr>
           </thead>
           <tbody>
-            {employees.map((employee) => (
-              <tr key={employee.id} className="group">
-                <td className="sticky left-0 z-10 bg-white px-4 py-2 border-b border-gray-100 group-hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+            {teamMembers.map((member) => (
+              <tr key={member.id} className="group">
+                <td className="sticky left-0 z-10 bg-white px-4 py-2 border-b border-gray-100 group-hover:bg-gray-50 transition-colors max-w-[200px] overflow-hidden">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 shrink-0 rounded-full bg-gray-200 flex items-center justify-center">
                       <span className="font-display text-xs font-semibold text-gray-600">
-                        {employee.full_name
+                        {member.full_name
                           .split(" ")
                           .map((n) => n[0])
                           .join("")}
                       </span>
                     </div>
-                    <div>
-                      <p className="font-body text-sm font-medium text-orendt-black leading-tight">
-                        {employee.full_name}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-body text-sm font-medium text-orendt-black leading-tight whitespace-nowrap truncate">
+                        {member.full_name}
                       </p>
-                      {employee.department && (
-                        <p className="font-body text-[10px] text-gray-400">
-                          {employee.department}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </td>
                 {days.map((day) => {
                   const dateStr = formatDate(day);
-                  const absence = absenceMap[employee.id]?.[dateStr];
+                  const absence = absenceMap[member.id]?.[dateStr];
                   const weekend = isWeekend(day);
                   const today = isToday(day);
 
@@ -171,7 +166,9 @@ export default function AbsenceCalendar({
                             className="font-body text-[9px] font-medium truncate px-0.5"
                             style={{ color: ABSENCE_CONFIG[absence.type].color }}
                           >
-                            {ABSENCE_CONFIG[absence.type].label.charAt(0)}
+                            {absence.type === "leaving_early" && absence.note
+                              ? absence.note.match(/^ab (\d{1,2}:\d{2})/)?.[1] ?? "F"
+                              : ABSENCE_CONFIG[absence.type].label.charAt(0)}
                           </span>
                         </div>
                       )}

@@ -1,11 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 
-export async function getEmployees() {
+/** Profile aller Nutzer mit Logi-App-Zugang (SECURITY DEFINER-RPC). */
+export async function getLogiPlannerMembers() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("employees")
-    .select("*")
-    .order("full_name");
+  const { data, error } = await supabase.rpc("get_logi_planner_members");
 
   if (error) throw error;
   return data;

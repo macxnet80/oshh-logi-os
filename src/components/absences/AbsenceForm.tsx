@@ -5,13 +5,12 @@ import { X } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
-import { ABSENCE_CONFIG, type AbsenceType, type Employee } from "@/lib/types";
+import { ABSENCE_CONFIG, type AbsenceType, type PlannerMember } from "@/lib/types";
 
 interface AbsenceFormProps {
-  employees: Employee[];
-  currentEmployeeId?: string;
+  currentMember: PlannerMember;
   onSubmit: (data: {
-    employee_id: string;
+    profile_id: string;
     type: AbsenceType;
     start_date: string;
     end_date: string;
@@ -26,49 +25,46 @@ const typeOptions = Object.entries(ABSENCE_CONFIG).map(([value, config]) => ({
 }));
 
 export default function AbsenceForm({
-  employees,
-  currentEmployeeId,
+  currentMember,
   onSubmit,
   onClose,
 }: AbsenceFormProps) {
   const today = new Date().toISOString().split("T")[0];
-  const [employeeId, setEmployeeId] = useState(currentEmployeeId || employees[0]?.id || "");
   const [type, setType] = useState<AbsenceType>("vacation");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [note, setNote] = useState("");
-
-  const employeeOptions = employees.map((e) => ({
-    value: e.id,
-    label: e.full_name,
-  }));
+  const [leavingTime, setLeavingTime] = useState("14:00");
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const finalNote =
+      type === "leaving_early"
+        ? `ab ${leavingTime}${note ? ` – ${note}` : ""}`
+        : note;
     onSubmit({
-      employee_id: employeeId,
+      profile_id: currentMember.id,
       type,
       start_date: startDate,
       end_date: endDate,
-      note,
+      note: finalNote,
     });
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
       <div
         className="absolute inset-0 bg-orendt-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4 animate-scale-in">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-xl font-semibold text-orendt-black">
-            Abwesenheit eintragen
+            Eigene Abwesenheit
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-1 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors cursor-pointer"
             aria-label="Schließen"
@@ -78,13 +74,17 @@ export default function AbsenceForm({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Select
-            id="employee"
-            label="Mitarbeiter"
-            options={employeeOptions}
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-          />
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+            <p className="font-body text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Für
+            </p>
+            <p className="font-body text-sm font-semibold text-orendt-black mt-0.5">
+              {currentMember.full_name}
+            </p>
+            <p className="font-body text-xs text-gray-500 mt-0.5">
+              {currentMember.email}
+            </p>
+          </div>
 
           <Select
             id="type"
@@ -94,36 +94,69 @@ export default function AbsenceForm({
             onChange={(e) => setType(e.target.value as AbsenceType)}
           />
 
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              id="start_date"
-              label="Von"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-            />
-            <Input
-              id="end_date"
-              label="Bis"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              min={startDate}
-              required
-            />
-          </div>
+          {type === "leaving_early" ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                id="start_date"
+                label="Datum"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setEndDate(e.target.value);
+                }}
+                required
+              />
+              <Input
+                id="leaving_time"
+                label="Uhrzeit"
+                type="time"
+                value={leavingTime}
+                onChange={(e) => setLeavingTime(e.target.value)}
+                required
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                id="start_date"
+                label="Von"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+              />
+              <Input
+                id="end_date"
+                label="Bis"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate}
+                required
+              />
+            </div>
+          )}
 
           <Input
             id="note"
             label="Notiz (optional)"
-            placeholder="z.B. Halber Tag, ab 14 Uhr..."
+            placeholder={
+              type === "leaving_early"
+                ? "z.B. Arzttermin..."
+                : "z.B. Halber Tag, ab 14 Uhr..."
+            }
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
 
           <div className="flex gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              className="flex-1"
+            >
               Abbrechen
             </Button>
             <Button type="submit" className="flex-1">

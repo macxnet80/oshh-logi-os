@@ -9,16 +9,22 @@ import AbsenceBadge from "@/components/absences/AbsenceBadge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { addAbsence } from "@/app/absences/actions";
-import type { Absence, AbsenceType, Employee } from "@/lib/types";
+import type { Absence, AbsenceType, PlannerMember } from "@/lib/types";
 
 interface AbsencesClientProps {
-  employees: Employee[];
+  /** Nutzer mit Logi-App-Zugang (`get_logi_planner_members`) */
+  teamMembers: PlannerMember[];
   absences: Absence[];
+  /** Eigenes Profil in der Teamliste; null = nicht in `logi_user_access` */
+  currentMember: PlannerMember | null;
+  plannerLoadError?: string | null;
 }
 
 export default function AbsencesClient({
-  employees,
+  teamMembers,
   absences,
+  currentMember,
+  plannerLoadError,
 }: AbsencesClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -55,14 +61,14 @@ export default function AbsencesClient({
 
   const handleSubmit = useCallback(
     async (data: {
-      employee_id: string;
+      profile_id: string;
       type: AbsenceType;
       start_date: string;
       end_date: string;
       note: string;
     }) => {
       const result = await addAbsence(data);
-      if (result.success) {
+      if (result && "success" in result && result.success) {
         setShowForm(false);
         startTransition(() => {
           router.refresh();
@@ -72,7 +78,6 @@ export default function AbsencesClient({
     [router]
   );
 
-  // Upcoming absences (sorted by start date)
   const todayStr = new Date().toISOString().split("T")[0];
   const upcomingAbsences = absences
     .filter((a) => a.end_date >= todayStr)
@@ -81,68 +86,92 @@ export default function AbsencesClient({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold text-orendt-black tracking-tight">
             Abwesenheitsplaner
           </h1>
           <p className="font-body text-gray-600 mt-1">
-            Übersicht aller Team-Abwesenheiten auf einen Blick.
+            Alle Teammitglieder und deren Abwesenheiten. Eintragen kannst du nur
+            für dein eigenes Profil.
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} disabled={isPending}>
-          <Plus className="w-4 h-4" />
-          Eintragen
-        </Button>
+        {currentMember ? (
+          <Button onClick={() => setShowForm(true)} disabled={isPending}>
+            <Plus className="w-4 h-4" />
+            Eigene Abwesenheit
+          </Button>
+        ) : (
+          <p className="font-body text-sm text-gray-500 max-w-xs text-right">
+            Kein Logi-App-Zugang in der Teamliste — Eintragen nicht möglich.
+          </p>
+        )}
       </div>
 
-      {/* Calendar */}
-      <AbsenceCalendar
-        year={year}
-        month={month}
-        employees={employees}
-        absences={absences}
-        onPrevMonth={handlePrevMonth}
-        onNextMonth={handleNextMonth}
-        onToday={handleToday}
-      />
+      {plannerLoadError ? (
+        <Card className="p-6">
+          <p className="font-body text-sm text-gray-600">
+            Teamliste konnte nicht geladen werden: {plannerLoadError}
+          </p>
+        </Card>
+      ) : teamMembers.length === 0 ? (
+        <Card className="p-6">
+          <p className="font-body text-sm text-gray-600">
+            Es sind keine Nutzer mit Logi-App-Zugang in{" "}
+            <code className="text-xs bg-gray-100 px-1 rounded">
+              logi_user_access
+            </code>{" "}
+            hinterlegt.
+          </p>
+        </Card>
+      ) : (
+        <AbsenceCalendar
+          year={year}
+          month={month}
+          teamMembers={teamMembers}
+          absences={absences}
+          onPrevMonth={handlePrevMonth}
+          onNextMonth={handleNextMonth}
+          onToday={handleToday}
+        />
+      )}
 
-      {/* Upcoming Absences */}
-      {upcomingAbsences.length > 0 && (
+      {upcomingAbsences.length > 0 && teamMembers.length > 0 && (
         <Card>
           <h3 className="font-display text-base font-semibold text-orendt-black mb-3">
             Anstehende Abwesenheiten
           </h3>
           <div className="divide-y divide-gray-100">
             {upcomingAbsences.map((absence) => {
-              const employee = employees.find(
-                (e) => e.id === absence.employee_id
+              const member = teamMembers.find(
+                (m) => m.id === absence.profile_id
               );
               return (
                 <div
                   key={absence.id}
-                  className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0"
+                  className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="w-7 h-7 shrink-0 rounded-full bg-gray-200 flex items-center justify-center">
                       <span className="font-display text-xs font-semibold text-gray-600">
-                        {employee?.full_name
+                        {member?.full_name
                           .split(" ")
                           .map((n) => n[0])
                           .join("") || "?"}
                       </span>
                     </div>
-                    <div>
-                      <p className="font-body text-sm font-medium text-orendt-black">
-                        {employee?.full_name}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-body text-sm font-medium text-orendt-black whitespace-nowrap truncate">
+                        {member?.full_name}
                       </p>
                       <p className="font-body text-xs text-gray-500">
                         {absence.start_date === absence.end_date
-                          ? new Date(absence.start_date + "T12:00:00").toLocaleDateString(
-                              "de-DE",
-                              { day: "numeric", month: "short" }
-                            )
+                          ? new Date(
+                              absence.start_date + "T12:00:00"
+                            ).toLocaleDateString("de-DE", {
+                              day: "numeric",
+                              month: "short",
+                            })
                           : `${new Date(absence.start_date + "T12:00:00").toLocaleDateString(
                               "de-DE",
                               { day: "numeric", month: "short" }
@@ -162,10 +191,9 @@ export default function AbsencesClient({
         </Card>
       )}
 
-      {/* Form Modal */}
-      {showForm && (
+      {showForm && currentMember && (
         <AbsenceForm
-          employees={employees}
+          currentMember={currentMember}
           onSubmit={handleSubmit}
           onClose={() => setShowForm(false)}
         />

@@ -46,7 +46,7 @@ export const MOCK_EMPLOYEES: Employee[] = [
 export const MOCK_ABSENCES: Absence[] = [
   {
     id: "a1",
-    employee_id: "1",
+    profile_id: "1",
     type: "vacation",
     start_date: "2026-03-16",
     end_date: "2026-03-20",
@@ -55,7 +55,7 @@ export const MOCK_ABSENCES: Absence[] = [
   },
   {
     id: "a2",
-    employee_id: "2",
+    profile_id: "2",
     type: "home_office",
     start_date: "2026-03-12",
     end_date: "2026-03-12",
@@ -64,7 +64,7 @@ export const MOCK_ABSENCES: Absence[] = [
   },
   {
     id: "a3",
-    employee_id: "3",
+    profile_id: "3",
     type: "sick",
     start_date: "2026-03-10",
     end_date: "2026-03-14",
@@ -73,7 +73,7 @@ export const MOCK_ABSENCES: Absence[] = [
   },
   {
     id: "a4",
-    employee_id: "4",
+    profile_id: "4",
     type: "leaving_early",
     start_date: "2026-03-13",
     end_date: "2026-03-13",
@@ -82,7 +82,7 @@ export const MOCK_ABSENCES: Absence[] = [
   },
   {
     id: "a5",
-    employee_id: "5",
+    profile_id: "5",
     type: "day_off",
     start_date: "2026-03-17",
     end_date: "2026-03-17",
@@ -91,7 +91,7 @@ export const MOCK_ABSENCES: Absence[] = [
   },
   {
     id: "a6",
-    employee_id: "2",
+    profile_id: "2",
     type: "vacation",
     start_date: "2026-03-24",
     end_date: "2026-03-28",
