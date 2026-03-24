@@ -48,8 +48,8 @@ export default async function DashboardPage() {
           logi-OS
         </h1>
         <p className="font-body text-gray-600 max-w-xl">
-          Die Anwendung kann ohne gültige Supabase-Umgebungsvariablen nicht
-          geladen werden. Bitte die Konfiguration in Vercel prüfen (siehe
+          Die Anwendung kann ohne vollständige Server-Konfiguration nicht
+          geladen werden. Bitte die Umgebungsvariablen im Hosting prüfen (siehe
           Hinweis oben).
         </p>
       </div>

@@ -29,12 +29,9 @@ export default function LoginForm({
   return (
     <div className="max-w-md mx-auto animate-fade-in">
       <Card className="p-8">
-        <h1 className="font-display text-2xl font-bold text-orendt-black mb-1">
+        <h1 className="font-display text-2xl font-bold text-orendt-black mb-6">
           Anmelden
         </h1>
-        <p className="font-body text-sm text-gray-600 mb-6">
-          logi-OS — Zugang mit Supabase Auth
-        </p>
 
         {authError && (
           <p

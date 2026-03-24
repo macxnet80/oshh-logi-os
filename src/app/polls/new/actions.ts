@@ -44,7 +44,7 @@ export async function createPoll(
     return {
       error:
         insertError?.message ??
-        "Umfrage konnte nicht angelegt werden. Ist die Tabelle logi_polls in Supabase angelegt?",
+        "Umfrage konnte nicht angelegt werden. Prüfe, ob die Datenbank-Tabellen für Umfragen angelegt sind.",
     };
   }
 

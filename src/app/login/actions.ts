@@ -18,7 +18,7 @@ export async function signInWithPassword(
   if (!supabase) {
     return {
       error:
-        "Anmeldung nicht möglich: Supabase-Umgebungsvariablen fehlen auf dem Server.",
+        "Anmeldung nicht möglich: Die Server-Konfiguration ist unvollständig.",
     };
   }
   const email = String(formData.get("email") ?? "").trim();

@@ -72,20 +72,11 @@ export default async function RootLayout({
             role="alert"
             className="bg-status-occupied-bg text-status-occupied px-4 py-3 font-body text-sm text-center border-b border-status-occupied/20"
           >
-            Server-Konfiguration:{" "}
-            <code className="font-mono text-xs">
-              NEXT_PUBLIC_SUPABASE_URL
-            </code>{" "}
-            und{" "}
-            <code className="font-mono text-xs">
-              NEXT_PUBLIC_SUPABASE_ANON_KEY
-            </code>{" "}
-            (oder{" "}
-            <code className="font-mono text-xs">
-              NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-            </code>
-            ) müssen in Vercel unter Environment Variables gesetzt und neu
-            deployed werden.
+            Server-Konfiguration unvollständig: Bitte im Hosting die
+            Backend-URL und den öffentlichen API-Schlüssel als
+            Umgebungsvariablen setzen (siehe{" "}
+            <code className="font-mono text-xs">.env.example</code>
+            ), neu deployen und die Seite neu laden.
           </div>
         ) : null}
         <Header

@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: Props) {
     params.error === "auth_callback"
       ? "Anmeldung ist fehlgeschlagen. Bitte versuche es erneut."
       : params.error === "config"
-        ? "Supabase ist auf dem Server nicht konfiguriert (Umgebungsvariablen in Vercel prüfen)."
+        ? "Die Server-Konfiguration ist unvollständig. Bitte die Umgebungsvariablen im Hosting prüfen."
         : undefined;
 
   return (

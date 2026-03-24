@@ -4,14 +4,14 @@ import { requireSupabasePublicConfig } from "@/lib/supabase/env";
 
 /**
  * Nur serverseitig (Server Actions, Route Handlers).
- * Benötigt SUPABASE_SERVICE_ROLE_KEY — niemals an den Client geben.
+ * Benötigt den Service-Role-Schlüssel aus der Umgebung — niemals an den Client geben.
  */
 export function createServiceRoleClient() {
   const { url } = requireSupabasePublicConfig();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY fehlt (nur auf dem Server, für Admin-Funktionen)."
+      "Geheimer Service-Schlüssel für Admin-Funktionen fehlt (nur serverseitig, siehe .env.example)."
     );
   }
   return createClient<Database>(url, key, {

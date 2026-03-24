@@ -129,13 +129,12 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         <Card className="p-6 border-status-occupied-bg bg-status-occupied-bg/30">
           <p className="font-body text-sm text-status-occupied">{loadError}</p>
           <p className="font-body text-xs text-gray-600 mt-2">
-            Prüfe, ob{" "}
-            <code className="text-xs bg-white/80 px-1 rounded">
-              SUPABASE_SERVICE_ROLE_KEY
-            </code>{" "}
+            Prüfe, ob der geheime Service-Schlüssel für Admin-Funktionen
             serverseitig in{" "}
             <code className="text-xs bg-white/80 px-1 rounded">.env.local</code>{" "}
-            gesetzt ist (nie im Client).
+            gesetzt ist (siehe{" "}
+            <code className="text-xs bg-white/80 px-1 rounded">.env.example</code>
+            , nie im Client).
           </p>
         </Card>
       ) : (
