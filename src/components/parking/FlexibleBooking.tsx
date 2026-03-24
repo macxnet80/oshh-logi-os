@@ -30,6 +30,51 @@ function getToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Typography inside the spot badge scales with label length so long names stay inside the box. */
+function spotBadgeTextClass(label: string) {
+  const n = label.length;
+  if (n <= 4) return "text-4xl leading-none";
+  if (n <= 7) return "text-3xl leading-tight";
+  if (n <= 11) return "text-2xl leading-tight";
+  if (n <= 16) return "text-xl leading-snug tracking-tight";
+  return "text-lg leading-snug tracking-tight break-words";
+}
+
+function ParkingSpotBadge({
+  label,
+  variant,
+}: {
+  label: string;
+  variant: "reserved" | "available";
+}) {
+  const text = label || "?";
+  const typo = spotBadgeTextClass(text);
+  const isReserved = variant === "reserved";
+
+  return (
+    <div
+      className={[
+        "inline-flex items-center justify-center rounded-2xl mb-6 px-4 py-4",
+        "min-h-[5.5rem] min-w-[5.5rem] max-w-[14rem] sm:max-w-[16rem]",
+        "text-balance",
+        isReserved
+          ? "bg-orendt-black shadow-xl"
+          : "bg-gray-50 border-2 border-gray-200",
+      ].join(" ")}
+    >
+      <span
+        className={[
+          "font-display font-bold text-center break-words hyphens-auto",
+          typo,
+          isReserved ? "text-orendt-accent" : "text-orendt-black",
+        ].join(" ")}
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
+
 export default function FlexibleBooking({ userId }: FlexibleBookingProps) {
   const today = useMemo(() => getToday(), []);
   const [firstAvailableSpot, setFirstAvailableSpot] =
@@ -128,11 +173,10 @@ export default function FlexibleBooking({ userId }: FlexibleBookingProps) {
             Dein Platz heute
           </p>
 
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-orendt-black rounded-2xl mb-6 shadow-xl">
-            <span className="font-display text-4xl font-bold text-orendt-accent">
-              {myTodayReservation.spot?.label ?? "?"}
-            </span>
-          </div>
+          <ParkingSpotBadge
+            label={myTodayReservation.spot?.label ?? "?"}
+            variant="reserved"
+          />
 
           <h2 className="font-display text-2xl font-bold text-orendt-black uppercase tracking-tight mb-2">
             Platz gesichert
@@ -197,11 +241,10 @@ export default function FlexibleBooking({ userId }: FlexibleBookingProps) {
             Verfügbar heute
           </p>
 
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-50 border-2 border-gray-200 rounded-2xl mb-6">
-            <span className="font-display text-4xl font-bold text-orendt-black">
-              {firstAvailableSpot.spot?.label ?? "?"}
-            </span>
-          </div>
+          <ParkingSpotBadge
+            label={firstAvailableSpot.spot?.label ?? "?"}
+            variant="available"
+          />
 
           <h2 className="font-display text-2xl font-bold text-orendt-black uppercase tracking-tight mb-2">
             Ein Platz wartet auf dich
