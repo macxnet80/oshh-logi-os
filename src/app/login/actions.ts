@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClientIfConfigured } from "@/lib/supabase/server";
 
 function sanitizeNext(next: string | null): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) {
@@ -14,7 +14,13 @@ function sanitizeNext(next: string | null): string {
 export async function signInWithPassword(
   formData: FormData
 ): Promise<{ error: string } | void> {
-  const supabase = await createClient();
+  const supabase = await createClientIfConfigured();
+  if (!supabase) {
+    return {
+      error:
+        "Anmeldung nicht möglich: Supabase-Umgebungsvariablen fehlen auf dem Server.",
+    };
+  }
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const next = sanitizeNext(formData.get("next") as string | null);

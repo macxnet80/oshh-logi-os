@@ -21,3 +21,15 @@ export function isLogiOsAdmin(
   if (isProfileAdminForLogi(profileRole)) return true;
   return access?.is_admin === true;
 }
+
+/**
+ * Abstimmungen anlegen (/polls/new, Dashboard-Karte, Menü): gleiche Rechte wie
+ * /admin — `profiles.role = admin` ODER `logi_user_access.is_admin`.
+ * Reine Logistik-Nutzer (team logistik, kein Profil-Admin, is_admin false) sehen es nicht.
+ */
+export function isLogiPollCreator(
+  access: { is_admin: boolean } | null | undefined,
+  profileRole?: string | null
+): boolean {
+  return isLogiOsAdmin(access, profileRole);
+}

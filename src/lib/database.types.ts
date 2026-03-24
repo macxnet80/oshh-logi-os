@@ -163,6 +163,79 @@ export type Database = {
         }
         Relationships: []
       }
+      logi_polls: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          options: Json
+          question: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          options: Json
+          question: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          options?: Json
+          question?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logi_polls_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      logi_poll_votes: {
+        Row: {
+          id: string
+          poll_id: string
+          selected_option: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          poll_id: string
+          selected_option: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          poll_id?: string
+          selected_option?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logi_poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "logi_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parking_spots: {
         Row: {
           created_at: string

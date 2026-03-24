@@ -1,6 +1,6 @@
 # Active Context
 
-## Aktueller Stand (2026-03-12)
+## Aktueller Stand (2026-03-24)
 
 ### Erledigt
 - Next.js 16 Projekt aufgesetzt mit TypeScript, Tailwind v4, ESLint
@@ -15,12 +15,18 @@
 - Server Component (Data Fetching) + Client Component (Interaktivität) Split
 - Server Actions für Insert/Delete
 - Temporäre anon RLS Policies für Entwicklung
+- Flexible-Parkplatzbuchung (Parkshare-Flow) in `logi-os` Dashboard integriert
+  - Client-Queries für verfügbare Plätze / Reservierung / Storno / App-Setting
+  - UI-States: bereits gebucht, verfügbar, alles belegt
+  - Sichtbarkeit für eingeloggte Nutzer mit `profiles.role = flexible` und logi-App-Zugang
+- **Abstimmungen (logi-OS):** Tabellen `logi_polls` / `logi_poll_votes`. Nur **Dashboard** zeigt Abstimmungen; `/polls` und `/polls/[id]` leiten auf `/` um. **Admins:** `/polls/new` zum Anlegen + Menü „Abstimmung anlegen“.
 
 ### Offen
 - Auth implementieren (Login, Middleware, geschützte Routen)
 - Abwesenheiten löschen/bearbeiten (UI)
 - Dashboard-Stats live aus DB
 - Anon RLS Policies durch Auth-basierte ersetzen
+- Optional: dedizierte Seite/Navigation für Parkplatzbuchung ergänzen (aktuell im Dashboard)
 
 ### Entscheidungen
 - Tailwind v4 mit `@theme inline` statt JS-Config

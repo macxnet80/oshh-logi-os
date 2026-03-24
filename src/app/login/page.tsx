@@ -17,7 +17,9 @@ export default async function LoginPage({ searchParams }: Props) {
   const callbackError =
     params.error === "auth_callback"
       ? "Anmeldung ist fehlgeschlagen. Bitte versuche es erneut."
-      : undefined;
+      : params.error === "config"
+        ? "Supabase ist auf dem Server nicht konfiguriert (Umgebungsvariablen in Vercel prüfen)."
+        : undefined;
 
   return (
     <LoginForm nextPath={nextPath} callbackError={callbackError} />

@@ -1,7 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublicConfig } from "@/lib/supabase/env";
-import { hasLogiAppAccess, isLogiOsAdmin } from "@/lib/logi-app-access";
+import {
+  hasLogiAppAccess,
+  isLogiOsAdmin,
+  isLogiPollCreator,
+} from "@/lib/logi-app-access";
 
 export async function updateSession(request: NextRequest) {
   const { url, key } = getSupabasePublicConfig();
@@ -86,6 +90,27 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (isLoginPath) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    redirectUrl.search = "";
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Abstimmungen nur auf dem Dashboard; /polls/new bleibt für Admins (Erstellung).
+  if (
+    pathname === "/polls" ||
+    (pathname.startsWith("/polls/") && !pathname.startsWith("/polls/new"))
+  ) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    redirectUrl.search = "";
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (
+    pathname.startsWith("/polls/new") &&
+    !isLogiPollCreator(access ?? null, profileRole)
+  ) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/";
     redirectUrl.search = "";

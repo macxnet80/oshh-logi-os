@@ -19,6 +19,18 @@
 - [ ] Anon RLS Policies durch Auth-basierte ersetzen
 - [ ] Abwesenheiten bearbeiten/löschen (UI)
 
+## v0.2.1 — Flexible Parkplatzbuchung (2026-03-24) ✅
+- [x] Parkshare-Flex-Booking-Verhalten in `logi-os` übernommen
+- [x] Supabase-Clientlogik für verfügbare Plätze + Reservierung + Storno ergänzt
+- [x] Dashboard zeigt Buchungsmodul für `profiles.role = flexible` (mit logi-App-Zugang)
+- [x] Lint für geänderte Dateien erfolgreich
+
+## v0.2.2 — Abstimmungen mit logi_polls (2026-03-24) ✅
+- [x] Dedizierte Tabellen `logi_polls` / `logi_poll_votes` + RLS (siehe `supabase/sql/logi_polls_tables.sql`)
+- [x] Types, Server Actions, Listen-/Detailseiten, Dashboard-Integration
+- [x] `PollVote` nutzt nur noch `pollId`; alte Poll-Helfer (`aggregate`, `responses-read`, `constants`) entfernt
+- [x] `npm run build` erfolgreich
+
 ## v0.3 — Erweiterungen (geplant)
 - [ ] Dashboard-Stats live aus DB
 - [ ] Filterfunktion nach Abteilung

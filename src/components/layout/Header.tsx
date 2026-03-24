@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarDays,
+  BarChart3,
   LogIn,
   LogOut,
   Menu,
@@ -19,6 +20,12 @@ const mainNavItems = [
   { href: "/absences", label: "Abwesenheiten", icon: CalendarDays },
 ];
 
+const pollsNewNavItem = {
+  href: "/polls/new",
+  label: "Abstimmungen",
+  icon: BarChart3,
+};
+
 const adminNavItem = {
   href: "/admin/users",
   label: "Benutzer & Teams",
@@ -29,10 +36,14 @@ export default function Header({
   userEmail,
   hasAppAccess,
   isAdmin,
+  canCreatePolls,
 }: {
   userEmail: string | null;
   hasAppAccess: boolean;
+  /** /admin/users — Profil-Admin oder logi_user_access.is_admin */
   isAdmin: boolean;
+  /** /polls/new — Profil-Admin oder logi_user_access.is_admin */
+  canCreatePolls: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -40,6 +51,7 @@ export default function Header({
 
   const navItems = [
     ...(hasAppAccess ? mainNavItems : []),
+    ...(canCreatePolls ? [pollsNewNavItem] : []),
     ...(isAdmin ? [adminNavItem] : []),
   ];
 
