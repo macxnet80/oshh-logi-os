@@ -167,18 +167,28 @@ export default function CheckinTerminal() {
 
       {phase === "success" && success ? (
         <div
-          className="w-full rounded-2xl border border-status-free bg-status-free-bg px-4 py-4 text-center"
+          className={
+            success.action === "checkout"
+              ? "w-full rounded-2xl border-2 border-orendt-accent bg-orendt-accent/25 px-4 py-4 text-center shadow-sm"
+              : "w-full rounded-2xl border border-status-free bg-status-free-bg px-4 py-4 text-center"
+          }
           role="status"
         >
           <p className="font-display text-lg font-semibold text-orendt-black">
             Hallo {success.name}!
           </p>
-          <p className="font-body text-sm text-gray-700 mt-2">
+          <p
+            className={
+              success.action === "checkout"
+                ? "font-body text-sm text-orendt-black/90 mt-2"
+                : "font-body text-sm text-gray-700 mt-2"
+            }
+          >
             {success.action === "checkin"
               ? "Du bist eingecheckt."
               : "Du bist ausgecheckt."}
           </p>
-          <p className="font-body text-xs text-gray-500 mt-1">
+          <p className="font-body text-xs text-gray-600 mt-1">
             {formatTime(success.time)}
           </p>
         </div>
