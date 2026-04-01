@@ -5,12 +5,30 @@ import ZeitenExportButton, {
   type ZeitenExportRow,
 } from "./ZeitenExportButton";
 import ZeitenFreelancerFilter from "./ZeitenFreelancerFilter";
+import ZeitenRowActions from "./ZeitenRowActions";
 
 type PageProps = {
   searchParams: Promise<{
     range?: string;
     freelancer?: string;
+    ok?: string;
+    err?: string;
   }>;
+};
+
+const errMessages: Record<string, string> = {
+  zeiten_invalid: "Ungültige oder unvollständige Zeitangaben.",
+  zeiten_range: "Check-out muss nach dem Check-in liegen.",
+  zeiten_not_found: "Eintrag wurde nicht gefunden.",
+  zeiten_open_conflict:
+    "Für diesen Freelancer gibt es bereits eine andere offene Session. Zuerst dort ein Check-out setzen oder Zeiten anpassen.",
+  zeiten_update_failed: "Speichern ist fehlgeschlagen.",
+  zeiten_delete_failed: "Löschen ist fehlgeschlagen.",
+};
+
+const okMessages: Record<string, string> = {
+  zeiten_updated: "Zeiten wurden gespeichert.",
+  zeiten_deleted: "Eintrag wurde gelöscht.",
 };
 
 function getRangeBounds(period: string): { from: string; to: string } {
@@ -60,6 +78,8 @@ export default async function AdminFreelancerZeitenPage({
   const params = await searchParams;
   const range = params.range === "month" || params.range === "30d" ? params.range : "week";
   const freelancerFilter = params.freelancer?.trim() || "";
+  const okKey = params.ok;
+  const errKey = params.err;
 
   const { from, to } = getRangeBounds(range);
 
@@ -130,6 +150,11 @@ export default async function AdminFreelancerZeitenPage({
         ? "letzte 30 Tage"
         : "diese Woche";
 
+  const nextParams = new URLSearchParams();
+  nextParams.set("range", range);
+  if (freelancerFilter) nextParams.set("freelancer", freelancerFilter);
+  const nextUrl = `${base}?${nextParams.toString()}`;
+
   return (
     <div className="space-y-8">
       <div>
@@ -140,6 +165,24 @@ export default async function AdminFreelancerZeitenPage({
           Zeitraum: {rangeLabel} ({formatDt(from)} – {formatDt(to)})
         </p>
       </div>
+
+      {okKey && okMessages[okKey] ? (
+        <div
+          className="rounded-xl border border-status-free bg-status-free-bg px-4 py-3 font-body text-sm text-orendt-black"
+          role="status"
+        >
+          {okMessages[okKey]}
+        </div>
+      ) : null}
+
+      {errKey && errMessages[errKey] ? (
+        <div
+          className="rounded-xl border border-status-occupied bg-status-occupied-bg px-4 py-3 font-body text-sm text-status-occupied"
+          role="alert"
+        >
+          {errMessages[errKey]}
+        </div>
+      ) : null}
 
       {error ? (
         <p className="font-body text-sm text-status-occupied">
@@ -206,6 +249,7 @@ export default async function AdminFreelancerZeitenPage({
                 <th className="py-2 pr-4 font-semibold">Check-in</th>
                 <th className="py-2 pr-4 font-semibold">Check-out</th>
                 <th className="py-2 pr-4 font-semibold">Dauer (Min.)</th>
+                <th className="py-2 pl-2 font-semibold text-right">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -214,27 +258,21 @@ export default async function AdminFreelancerZeitenPage({
                   const name = Array.isArray(r.freelancers)
                     ? r.freelancers[0]?.name ?? "—"
                     : r.freelancers?.name ?? "—";
-                  const d = durationMinutes(r.check_in, r.check_out);
                   return (
-                    <tr key={r.id} className="border-b border-gray-100">
-                      <td className="py-3 pr-4 font-medium text-orendt-black">
-                        {name}
-                      </td>
-                      <td className="py-3 pr-4">{formatDt(r.check_in)}</td>
-                      <td className="py-3 pr-4">
-                        {r.check_out ? formatDt(r.check_out) : (
-                          <span className="text-status-reserved">Offen</span>
-                        )}
-                      </td>
-                      <td className="py-3 pr-4">
-                        {d === null ? "—" : String(d)}
-                      </td>
+                    <tr key={r.id} className="border-b border-gray-100 align-top">
+                      <ZeitenRowActions
+                        id={r.id}
+                        name={name}
+                        checkInIso={r.check_in}
+                        checkOutIso={r.check_out}
+                        nextUrl={nextUrl}
+                      />
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-8 text-gray-500">
+                  <td colSpan={5} className="py-8 text-gray-500">
                     Keine Einträge im gewählten Zeitraum.
                   </td>
                 </tr>

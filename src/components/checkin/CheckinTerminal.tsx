@@ -17,6 +17,8 @@ export default function CheckinTerminal() {
   const [message, setMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState<SuccessPayload | null>(null);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Verhindert doppelte POSTs (4. Ziffer + „Bestätigen“, Doppeltap, Race). */
+  const submitInFlightRef = useRef(false);
 
   const clearReset = useCallback(() => {
     if (resetTimer.current) {
@@ -42,6 +44,8 @@ export default function CheckinTerminal() {
   const submit = useCallback(
     async (digits: string) => {
       if (digits.length !== 4) return;
+      if (submitInFlightRef.current) return;
+      submitInFlightRef.current = true;
       setPhase("loading");
       setMessage(null);
       setSuccess(null);
@@ -85,6 +89,8 @@ export default function CheckinTerminal() {
         setPhase("error");
         setMessage("Netzwerkfehler. Bitte erneut versuchen.");
         scheduleReset();
+      } finally {
+        submitInFlightRef.current = false;
       }
     },
     [scheduleReset]
@@ -95,9 +101,6 @@ export default function CheckinTerminal() {
     if (pin.length >= 4) return;
     const next = pin + d;
     setPin(next);
-    if (next.length === 4) {
-      void submit(next);
-    }
   };
 
   const onBackspace = () => {
@@ -135,7 +138,7 @@ export default function CheckinTerminal() {
           Check-in / Check-out
         </h1>
         <p className="font-body text-sm text-gray-600">
-          Gib deine vierstellige PIN ein.
+          Gib deine vierstellige PIN ein und tippe auf „Bestätigen“.
         </p>
       </div>
 

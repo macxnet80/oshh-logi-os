@@ -1,29 +1,15 @@
 "use server";
 
-import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireLogiAdmin } from "@/lib/authz-server";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeFreelancerPin } from "./pin-utils";
 
 const PATH_FREELANCERS = "/admin/freelancers";
 const PATH_ZEITEN = "/admin/freelancers/zeiten";
 
 const FREELANCER_NAME_MAX_LENGTH = 120;
-
-async function generateUniquePin(): Promise<string> {
-  const supabase = await createClient();
-  for (let attempt = 0; attempt < 64; attempt++) {
-    const pin = String(randomInt(0, 10000)).padStart(4, "0");
-    const { data } = await supabase
-      .from("freelancers")
-      .select("id")
-      .eq("pin", pin)
-      .maybeSingle();
-    if (!data) return pin;
-  }
-  throw new Error("Kein freier PIN verfügbar.");
-}
 
 export async function updateFreelancerName(formData: FormData): Promise<void> {
   await requireLogiAdmin();
@@ -54,15 +40,30 @@ export async function updateFreelancerName(formData: FormData): Promise<void> {
 export async function createFreelancer(formData: FormData): Promise<void> {
   await requireLogiAdmin();
   const name = String(formData.get("name") ?? "").trim();
+  const pinRaw = String(formData.get("pin") ?? "");
+  const pin = normalizeFreelancerPin(pinRaw);
+
   if (!name) {
     redirect(`${PATH_FREELANCERS}?err=name_empty`);
   }
   if (name.length > FREELANCER_NAME_MAX_LENGTH) {
     redirect(`${PATH_FREELANCERS}?err=name_too_long`);
   }
+  if (!pin) {
+    redirect(`${PATH_FREELANCERS}?err=pin_invalid`);
+  }
 
   const supabase = await createClient();
-  const pin = await generateUniquePin();
+
+  const { data: pinTaken } = await supabase
+    .from("freelancers")
+    .select("id")
+    .eq("pin", pin)
+    .maybeSingle();
+
+  if (pinTaken) {
+    redirect(`${PATH_FREELANCERS}?err=pin_taken`);
+  }
 
   const { error } = await supabase.from("freelancers").insert({
     name,
@@ -100,14 +101,30 @@ export async function toggleFreelancerActive(id: string, nextActive: boolean): P
   redirect(`${PATH_FREELANCERS}?ok=updated`);
 }
 
-export async function regenerateFreelancerPin(id: string): Promise<void> {
+export async function updateFreelancerPin(formData: FormData): Promise<void> {
   await requireLogiAdmin();
+  const id = String(formData.get("id") ?? "").trim();
+  const pinRaw = String(formData.get("pin") ?? "");
+  const pin = normalizeFreelancerPin(pinRaw);
+
   if (!id) {
     redirect(`${PATH_FREELANCERS}?err=invalid`);
   }
+  if (!pin) {
+    redirect(`${PATH_FREELANCERS}?err=pin_invalid`);
+  }
 
   const supabase = await createClient();
-  const pin = await generateUniquePin();
+
+  const { data: conflict } = await supabase
+    .from("freelancers")
+    .select("id")
+    .eq("pin", pin)
+    .maybeSingle();
+
+  if (conflict && conflict.id !== id) {
+    redirect(`${PATH_FREELANCERS}?err=pin_taken`);
+  }
 
   const { error } = await supabase.from("freelancers").update({ pin }).eq("id", id);
 

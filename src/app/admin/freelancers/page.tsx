@@ -5,6 +5,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { createFreelancer } from "./actions";
 import FreelancerNameEditor from "./FreelancerNameEditor";
+import FreelancerPinEditor from "./FreelancerPinEditor";
 import FreelancerQrPanel from "./FreelancerQrPanel";
 import FreelancerRowActions from "./FreelancerRowActions";
 
@@ -15,9 +16,11 @@ type PageProps = {
 const errMessages: Record<string, string> = {
   name_empty: "Bitte einen Namen eingeben.",
   name_too_long: "Der Name ist zu lang (max. 120 Zeichen).",
+  pin_invalid: "PIN muss genau vier Ziffern haben.",
+  pin_taken: "Diese PIN wird bereits verwendet.",
   create_failed: "Freelancer konnte nicht angelegt werden.",
   update_failed: "Änderung konnte nicht gespeichert werden.",
-  pin_failed: "PIN konnte nicht neu gesetzt werden.",
+  pin_failed: "PIN konnte nicht gespeichert werden.",
   delete_failed: "Löschen fehlgeschlagen.",
   invalid: "Ungültige Anfrage.",
 };
@@ -26,7 +29,7 @@ const okMessages: Record<string, string> = {
   created: "Freelancer wurde angelegt.",
   updated: "Gespeichert.",
   edited: "Name wurde gespeichert.",
-  pin: "Neuer PIN wurde gesetzt.",
+  pin: "PIN wurde gespeichert.",
   deleted: "Freelancer wurde gelöscht.",
 };
 
@@ -88,8 +91,11 @@ export default async function AdminFreelancersPage({ searchParams }: PageProps) 
         <h2 className="font-display text-lg font-semibold text-orendt-black mb-4">
           Neuer Freelancer
         </h2>
-        <form action={createFreelancer} className="flex flex-col sm:flex-row gap-3 sm:items-end">
-          <div className="flex-1 min-w-0">
+        <form
+          action={createFreelancer}
+          className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+        >
+          <div className="flex-1 min-w-[200px]">
             <label htmlFor="fl-name" className="sr-only">
               Name
             </label>
@@ -104,12 +110,29 @@ export default async function AdminFreelancersPage({ searchParams }: PageProps) 
               className="w-full"
             />
           </div>
-          <Button type="submit" size="md">
+          <div className="w-full sm:w-36 shrink-0">
+            <label htmlFor="fl-pin" className="sr-only">
+              PIN
+            </label>
+            <Input
+              id="fl-pin"
+              name="pin"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="PIN (4 Ziffern)"
+              required
+              maxLength={4}
+              autoComplete="off"
+              className="w-full font-mono tracking-widest"
+            />
+          </div>
+          <Button type="submit" size="md" className="shrink-0">
             Anlegen
           </Button>
         </form>
         <p className="font-body text-xs text-gray-500 mt-2">
-          Es wird automatisch eine vierstellige PIN vergeben.
+          Vierstellige PIN selbst vergeben (nur Ziffern). Sie muss eindeutig sein.
         </p>
       </Card>
 
@@ -140,8 +163,8 @@ export default async function AdminFreelancersPage({ searchParams }: PageProps) 
                     <td className="py-3 pr-4 align-top">
                       <FreelancerNameEditor id={row.id} initialName={row.name} />
                     </td>
-                    <td className="py-3 pr-4 font-mono tracking-widest">
-                      {row.pin}
+                    <td className="py-3 pr-4 align-top">
+                      <FreelancerPinEditor id={row.id} initialPin={row.pin} />
                     </td>
                     <td className="py-3 pr-4">
                       {row.is_active ? (
