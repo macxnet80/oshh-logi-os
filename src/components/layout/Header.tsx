@@ -11,6 +11,7 @@ import {
   LogIn,
   LogOut,
   Menu,
+  UserCheck,
   Users,
   X,
 } from "lucide-react";
@@ -26,11 +27,18 @@ const pollsNewNavItem = {
   icon: BarChart3,
 };
 
-const adminNavItem = {
-  href: "/admin/users",
-  label: "Benutzer & Teams",
-  icon: Users,
-};
+const adminNavItems = [
+  {
+    href: "/admin/users",
+    label: "Benutzer & Teams",
+    icon: Users,
+  },
+  {
+    href: "/admin/freelancers",
+    label: "Freelancer",
+    icon: UserCheck,
+  },
+];
 
 export default function Header({
   userEmail,
@@ -52,7 +60,7 @@ export default function Header({
   const navItems = [
     ...(hasAppAccess ? mainNavItems : []),
     ...(canCreatePolls ? [pollsNewNavItem] : []),
-    ...(isAdmin ? [adminNavItem] : []),
+    ...(isAdmin ? adminNavItems : []),
   ];
 
   useEffect(() => {
@@ -72,6 +80,10 @@ export default function Header({
       document.body.style.overflow = prevOverflow;
     };
   }, [open]);
+
+  if (pathname.startsWith("/checkin")) {
+    return null;
+  }
 
   return (
     <>
@@ -153,7 +165,12 @@ export default function Header({
           ) : null}
           <ul className="flex flex-col gap-1">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive =
+                item.href === "/admin/freelancers"
+                  ? pathname.startsWith("/admin/freelancers")
+                  : item.href === "/admin/users"
+                    ? pathname.startsWith("/admin/users")
+                    : pathname === item.href;
               const Icon = item.icon;
               return (
                 <li key={item.href}>

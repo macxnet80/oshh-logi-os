@@ -142,6 +142,62 @@ export type Database = {
         }
         Relationships: []
       }
+      freelancer_checkins: {
+        Row: {
+          check_in: string
+          check_out: string | null
+          created_at: string
+          freelancer_id: string
+          id: string
+        }
+        Insert: {
+          check_in: string
+          check_out?: string | null
+          created_at?: string
+          freelancer_id: string
+          id?: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string | null
+          created_at?: string
+          freelancer_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freelancer_checkins_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "freelancers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freelancers: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          pin: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          pin: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          pin?: string
+        }
+        Relationships: []
+      }
       logi_user_access: {
         Row: {
           is_admin: boolean

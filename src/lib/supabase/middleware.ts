@@ -40,6 +40,11 @@ export async function updateSession(request: NextRequest) {
   const isLoginPath = pathname === "/login";
   const isAuthCallbackPath = pathname.startsWith("/auth");
 
+  // Öffentliches Checkin-Terminal (Freelancer ohne Account) + API
+  if (pathname.startsWith("/checkin") || pathname.startsWith("/api/checkin")) {
+    return supabaseResponse;
+  }
+
   if (pathname === "/kein-zugang") {
     if (!user) {
       const redirectUrl = request.nextUrl.clone();
