@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import Button from "@/components/ui/Button";
+import { deferAfterClick } from "@/lib/defer-inp";
 import { deleteFreelancer, toggleFreelancerActive } from "./actions";
 
 export default function FreelancerRowActions({
@@ -26,15 +27,17 @@ export default function FreelancerRowActions({
         variant="danger"
         disabled={pending}
         onClick={() => {
-          if (
-            !confirm(
-              "Diesen Freelancer und alle zugehörigen Zeiten wirklich löschen?"
-            )
-          ) {
-            return;
-          }
-          startTransition(() => {
-            void deleteFreelancer(id);
+          deferAfterClick(() => {
+            if (
+              !confirm(
+                "Diesen Freelancer und alle zugehörigen Zeiten wirklich löschen?"
+              )
+            ) {
+              return;
+            }
+            startTransition(() => {
+              void deleteFreelancer(id);
+            });
           });
         }}
       >

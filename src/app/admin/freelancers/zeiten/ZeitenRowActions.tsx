@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Button from "@/components/ui/Button";
+import { deferAfterClick } from "@/lib/defer-inp";
 import { deleteFreelancerCheckinForm, updateFreelancerCheckin } from "./actions";
 
 /** `datetime-local` Wert (Browser-Lokalzeit). */
@@ -48,18 +49,20 @@ export default function ZeitenRowActions({
   const [pending, startTransition] = useTransition();
 
   const handleDelete = () => {
-    if (
-      !confirm(
-        "Diesen Zeiteintrag wirklich löschen? Dies kann nicht rückgängig gemacht werden."
-      )
-    ) {
-      return;
-    }
-    startTransition(() => {
-      const fd = new FormData();
-      fd.set("id", id);
-      fd.set("next", nextUrl);
-      void deleteFreelancerCheckinForm(fd);
+    deferAfterClick(() => {
+      if (
+        !confirm(
+          "Diesen Zeiteintrag wirklich löschen? Dies kann nicht rückgängig gemacht werden."
+        )
+      ) {
+        return;
+      }
+      startTransition(() => {
+        const fd = new FormData();
+        fd.set("id", id);
+        fd.set("next", nextUrl);
+        void deleteFreelancerCheckinForm(fd);
+      });
     });
   };
 
