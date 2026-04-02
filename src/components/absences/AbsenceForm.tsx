@@ -35,13 +35,16 @@ export default function AbsenceForm({
   const [endDate, setEndDate] = useState(today);
   const [note, setNote] = useState("");
   const [leavingTime, setLeavingTime] = useState("14:00");
+  const [arrivalTime, setArrivalTime] = useState("10:00");
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const finalNote =
       type === "leaving_early"
         ? `ab ${leavingTime}${note ? ` – ${note}` : ""}`
-        : note;
+        : type === "coming_late"
+          ? `ab ${arrivalTime}${note ? ` – ${note}` : ""}`
+          : note;
     onSubmit({
       profile_id: currentMember.id,
       type,
@@ -116,6 +119,28 @@ export default function AbsenceForm({
                 required
               />
             </div>
+          ) : type === "coming_late" ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                id="start_date_late"
+                label="Datum"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setEndDate(e.target.value);
+                }}
+                required
+              />
+              <Input
+                id="arrival_time"
+                label="Ankunft ab"
+                type="time"
+                value={arrivalTime}
+                onChange={(e) => setArrivalTime(e.target.value)}
+                required
+              />
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <Input
@@ -144,7 +169,9 @@ export default function AbsenceForm({
             placeholder={
               type === "leaving_early"
                 ? "z.B. Arzttermin..."
-                : "z.B. Halber Tag, ab 14 Uhr..."
+                : type === "coming_late"
+                  ? "z.B. Kindergarten..."
+                  : "z.B. Halber Tag, ab 14 Uhr..."
             }
             value={note}
             onChange={(e) => setNote(e.target.value)}

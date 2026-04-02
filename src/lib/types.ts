@@ -2,6 +2,7 @@ export type AbsenceType =
   | "vacation"
   | "day_off"
   | "leaving_early"
+  | "coming_late"
   | "sick"
   | "home_office";
 
@@ -59,6 +60,12 @@ export const ABSENCE_CONFIG: Record<
     color: "#F59E0B",
     bgColor: "#FFFBEB",
     icon: "Clock",
+  },
+  coming_late: {
+    label: "Später kommen",
+    color: "#8B5CF6",
+    bgColor: "#F5F3FF",
+    icon: "Sunrise",
   },
   sick: {
     label: "Krank",

@@ -166,7 +166,9 @@ export default function AbsenceCalendar({
                             className="font-body text-[9px] font-medium truncate px-0.5"
                             style={{ color: ABSENCE_CONFIG[absence.type].color }}
                           >
-                            {absence.type === "leaving_early" && absence.note
+                            {(absence.type === "leaving_early" ||
+                              absence.type === "coming_late") &&
+                            absence.note
                               ? absence.note.match(/^ab (\d{1,2}:\d{2})/)?.[1] ?? "F"
                               : ABSENCE_CONFIG[absence.type].label.charAt(0)}
                           </span>

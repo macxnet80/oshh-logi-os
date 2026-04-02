@@ -17,7 +17,7 @@ CREATE TABLE employees (
 CREATE TABLE absences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('vacation', 'day_off', 'leaving_early', 'sick', 'home_office')),
+  type TEXT NOT NULL CHECK (type IN ('vacation', 'day_off', 'leaving_early', 'coming_late', 'sick', 'home_office')),
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   note TEXT,
