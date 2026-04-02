@@ -15,8 +15,10 @@ interface AbsenceFormProps {
     start_date: string;
     end_date: string;
     note: string;
-  }) => void;
+  }) => void | Promise<void>;
   onClose: () => void;
+  /** Server- oder Validierungsfehler nach Eintragen */
+  submitError?: string | null;
 }
 
 const typeOptions = Object.entries(ABSENCE_CONFIG).map(([value, config]) => ({
@@ -28,6 +30,7 @@ export default function AbsenceForm({
   currentMember,
   onSubmit,
   onClose,
+  submitError,
 }: AbsenceFormProps) {
   const today = new Date().toISOString().split("T")[0];
   const [type, setType] = useState<AbsenceType>("vacation");
@@ -36,8 +39,9 @@ export default function AbsenceForm({
   const [note, setNote] = useState("");
   const [leavingTime, setLeavingTime] = useState("14:00");
   const [arrivalTime, setArrivalTime] = useState("10:00");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const finalNote =
       type === "leaving_early"
@@ -45,13 +49,21 @@ export default function AbsenceForm({
         : type === "coming_late"
           ? `ab ${arrivalTime}${note ? ` – ${note}` : ""}`
           : note;
-    onSubmit({
-      profile_id: currentMember.id,
-      type,
-      start_date: startDate,
-      end_date: endDate,
-      note: finalNote,
-    });
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        profile_id: currentMember.id,
+        type,
+        start_date: startDate,
+        end_date:
+          type === "leaving_early" || type === "coming_late"
+            ? startDate
+            : endDate,
+        note: finalNote,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -94,7 +106,13 @@ export default function AbsenceForm({
             label="Art der Abwesenheit"
             options={typeOptions}
             value={type}
-            onChange={(e) => setType(e.target.value as AbsenceType)}
+            onChange={(e) => {
+              const next = e.target.value as AbsenceType;
+              setType(next);
+              if (next === "leaving_early" || next === "coming_late") {
+                setEndDate(startDate);
+              }
+            }}
           />
 
           {type === "leaving_early" ? (
@@ -177,17 +195,27 @@ export default function AbsenceForm({
             onChange={(e) => setNote(e.target.value)}
           />
 
+          {submitError ? (
+            <p
+              className="font-body text-sm text-status-occupied bg-status-occupied-bg/40 border border-status-occupied/15 px-4 py-3 rounded-xl"
+              role="alert"
+            >
+              {submitError}
+            </p>
+          ) : null}
+
           <div className="flex gap-3 pt-2">
             <Button
               type="button"
               variant="secondary"
               onClick={onClose}
               className="flex-1"
+              disabled={isSubmitting}
             >
               Abbrechen
             </Button>
-            <Button type="submit" className="flex-1">
-              Eintragen
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? "Wird gespeichert…" : "Eintragen"}
             </Button>
           </div>
         </form>

@@ -32,6 +32,7 @@ export default function AbsencesClient({
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [showForm, setShowForm] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handlePrevMonth = useCallback(() => {
     setMonth((prev) => {
@@ -67,16 +68,31 @@ export default function AbsencesClient({
       end_date: string;
       note: string;
     }) => {
+      setFormError(null);
       const result = await addAbsence(data);
+      if (result && "error" in result && result.error) {
+        setFormError(result.error);
+        return;
+      }
       if (result && "success" in result && result.success) {
+        setFormError(null);
         setShowForm(false);
         startTransition(() => {
           router.refresh();
         });
+        return;
       }
+      setFormError(
+        "Speichern fehlgeschlagen. Bitte erneut versuchen oder Seite neu laden."
+      );
     },
     [router]
   );
+
+  const openForm = useCallback(() => {
+    setFormError(null);
+    setShowForm(true);
+  }, []);
 
   const todayStr = new Date().toISOString().split("T")[0];
   const upcomingAbsences = absences
@@ -97,7 +113,7 @@ export default function AbsencesClient({
           </p>
         </div>
         {currentMember ? (
-          <Button onClick={() => setShowForm(true)} disabled={isPending}>
+          <Button onClick={openForm} disabled={isPending}>
             <Plus className="w-4 h-4" />
             Eigene Abwesenheit
           </Button>
@@ -195,7 +211,11 @@ export default function AbsencesClient({
         <AbsenceForm
           currentMember={currentMember}
           onSubmit={handleSubmit}
-          onClose={() => setShowForm(false)}
+          onClose={() => {
+            setFormError(null);
+            setShowForm(false);
+          }}
+          submitError={formError}
         />
       )}
     </div>
