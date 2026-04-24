@@ -6,6 +6,7 @@ import ZeitenExportButton, {
 } from "./ZeitenExportButton";
 import ZeitenFreelancerFilter from "./ZeitenFreelancerFilter";
 import ZeitenRowActions from "./ZeitenRowActions";
+import { formatDurationHhMm } from "./duration-format";
 
 type PageProps = {
   searchParams: Promise<{
@@ -64,14 +65,6 @@ function formatDt(iso: string) {
   }
 }
 
-function durationMinutes(checkIn: string, checkOut: string | null): number | null {
-  if (!checkOut) return null;
-  const a = new Date(checkIn).getTime();
-  const b = new Date(checkOut).getTime();
-  if (Number.isNaN(a) || Number.isNaN(b) || b < a) return null;
-  return Math.round((b - a) / 60_000);
-}
-
 export default async function AdminFreelancerZeitenPage({
   searchParams,
 }: PageProps) {
@@ -125,12 +118,12 @@ export default async function AdminFreelancerZeitenPage({
     const name = Array.isArray(r.freelancers)
       ? r.freelancers[0]?.name ?? "—"
       : r.freelancers?.name ?? "—";
-    const d = durationMinutes(r.check_in, r.check_out);
+    const d = formatDurationHhMm(r.check_in, r.check_out);
     return {
       name,
       checkIn: formatDt(r.check_in),
       checkOut: r.check_out ? formatDt(r.check_out) : "—",
-      durationMin: d,
+      durationHhMm: d,
     };
   }) ?? [];
 
@@ -154,6 +147,11 @@ export default async function AdminFreelancerZeitenPage({
   nextParams.set("range", range);
   if (freelancerFilter) nextParams.set("freelancer", freelancerFilter);
   const nextUrl = `${base}?${nextParams.toString()}`;
+
+  const selectedFreelancerName =
+    freelancerFilter && freelancerList?.length
+      ? (freelancerList.find((f) => f.id === freelancerFilter)?.name ?? null)
+      : null;
 
   return (
     <div className="space-y-8">
@@ -236,7 +234,14 @@ export default async function AdminFreelancerZeitenPage({
             selectedId={freelancerFilter}
           />
 
-          <ZeitenExportButton rows={exportRows} />
+          <ZeitenExportButton
+            rows={exportRows}
+            meta={{
+              periodLabel: rangeLabel,
+              rangeText: `${formatDt(from)} – ${formatDt(to)}`,
+              freelancerScope: selectedFreelancerName ?? "Alle Freelancer",
+            }}
+          />
         </div>
       </Card>
 
@@ -248,7 +253,7 @@ export default async function AdminFreelancerZeitenPage({
                 <th className="py-2 pr-4 font-semibold">Name</th>
                 <th className="py-2 pr-4 font-semibold">Check-in</th>
                 <th className="py-2 pr-4 font-semibold">Check-out</th>
-                <th className="py-2 pr-4 font-semibold">Dauer (Min.)</th>
+                <th className="py-2 pr-4 font-semibold">Dauer (hh:MM)</th>
                 <th className="py-2 pl-2 font-semibold text-right">Aktionen</th>
               </tr>
             </thead>

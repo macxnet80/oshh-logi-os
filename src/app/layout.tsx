@@ -63,9 +63,10 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="de">
+    <html lang="de" suppressHydrationWarning>
       <body
         className={`${sora.variable} ${instrumentSans.variable} antialiased`}
+        suppressHydrationWarning
       >
         {!supabase ? (
           <div
