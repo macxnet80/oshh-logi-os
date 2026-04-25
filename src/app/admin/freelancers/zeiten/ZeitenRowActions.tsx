@@ -59,12 +59,18 @@ export default function ZeitenRowActions({
   checkInIso,
   checkOutIso,
   nextUrl,
+  hourlyRateLabel,
+  totalLabel,
+  vatDeductibleLabel,
 }: {
   id: string;
   name: string;
   checkInIso: string;
   checkOutIso: string | null;
   nextUrl: string;
+  hourlyRateLabel: string;
+  totalLabel: string;
+  vatDeductibleLabel: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -90,7 +96,7 @@ export default function ZeitenRowActions({
 
   if (editing) {
     return (
-      <td className="py-3 pl-2 align-top" colSpan={5}>
+      <td className="py-3 pl-2 align-top" colSpan={8}>
         <form
           className="space-y-3 rounded-xl border border-gray-200 bg-gray-50/80 p-4 max-w-xl"
           onSubmit={async (e) => {
@@ -224,6 +230,15 @@ export default function ZeitenRowActions({
         )}
       </td>
       <td className="py-3 pr-4">{durationLabel(checkInIso, checkOutIso)}</td>
+      <td className="py-3 pr-4 text-right tabular-nums whitespace-nowrap">
+        {hourlyRateLabel}
+      </td>
+      <td className="py-3 pr-4 text-right tabular-nums font-medium whitespace-nowrap">
+        {totalLabel}
+      </td>
+      <td className="py-3 pr-4 text-gray-700 whitespace-nowrap">
+        {vatDeductibleLabel}
+      </td>
       <td className="py-3 pl-2 text-right whitespace-nowrap">
         <div className="flex flex-wrap justify-end gap-2">
           <Button

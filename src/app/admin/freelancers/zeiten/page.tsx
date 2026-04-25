@@ -6,7 +6,9 @@ import ZeitenExportButton, {
 } from "./ZeitenExportButton";
 import ZeitenFreelancerFilter from "./ZeitenFreelancerFilter";
 import ZeitenRowActions from "./ZeitenRowActions";
-import { formatDurationHhMm } from "./duration-format";
+import { durationDecimalHours, formatDurationHhMm } from "./duration-format";
+import { formatEur, hourlyRateFromDb } from "./money-format";
+import { loadFreelancerBillingMap } from "@/lib/freelancer-billing-query";
 
 type PageProps = {
   searchParams: Promise<{
@@ -83,6 +85,8 @@ export default async function AdminFreelancerZeitenPage({
     .select("id, name")
     .order("name", { ascending: true });
 
+  const billingByFreelancerId = await loadFreelancerBillingMap(supabase);
+
   let query = supabase
     .from("freelancer_checkins")
     .select(
@@ -106,26 +110,55 @@ export default async function AdminFreelancerZeitenPage({
 
   const { data: rows, error } = await query;
 
+  type FlRel = {
+    name: string;
+    hourly_rate_eur?: unknown;
+    input_vat_deductible?: boolean | null;
+  };
   type Row = {
     id: string;
     check_in: string;
     check_out: string | null;
     freelancer_id: string;
-    freelancers: { name: string } | { name: string }[] | null;
+    freelancers: FlRel | FlRel[] | null;
   };
 
-  const exportRows: ZeitenExportRow[] = (rows as Row[] | null)?.map((r) => {
-    const name = Array.isArray(r.freelancers)
-      ? r.freelancers[0]?.name ?? "—"
-      : r.freelancers?.name ?? "—";
-    const d = formatDurationHhMm(r.check_in, r.check_out);
+  function freelancerFromRow(r: Row): FlRel {
+    const raw = r.freelancers;
+    const base: FlRel = Array.isArray(raw)
+      ? (raw[0] ?? { name: "—" })
+      : (raw ?? { name: "—" });
+    const b = billingByFreelancerId.get(r.freelancer_id);
     return {
+      name: base.name,
+      hourly_rate_eur: b?.hourly_rate_eur ?? 0,
+      input_vat_deductible: b?.input_vat_deductible !== false,
+    };
+  }
+
+  const exportRows: ZeitenExportRow[] = [];
+  let exportSumNetEur = 0;
+  for (const r of (rows as Row[] | null) ?? []) {
+    const fl = freelancerFromRow(r);
+    const name = fl.name || "—";
+    const d = formatDurationHhMm(r.check_in, r.check_out);
+    const hours = durationDecimalHours(r.check_in, r.check_out);
+    const rate = hourlyRateFromDb(fl.hourly_rate_eur);
+    const totalEur = hours !== null ? hours * rate : null;
+    if (totalEur !== null) {
+      exportSumNetEur += totalEur;
+    }
+    const vatDeduct = fl.input_vat_deductible !== false;
+    exportRows.push({
       name,
       checkIn: formatDt(r.check_in),
       checkOut: r.check_out ? formatDt(r.check_out) : "—",
       durationHhMm: d,
-    };
-  }) ?? [];
+      hourlyRateLabel: `${formatEur(rate)}/h`,
+      totalLabel: totalEur !== null ? formatEur(totalEur) : "—",
+      vatDeductibleLabel: vatDeduct ? "Ja" : "Nein",
+    });
+  }
 
   const base = "/admin/freelancers/zeiten";
   const link = (r: string, f?: string) => {
@@ -240,6 +273,7 @@ export default async function AdminFreelancerZeitenPage({
               periodLabel: rangeLabel,
               rangeText: `${formatDt(from)} – ${formatDt(to)}`,
               freelancerScope: selectedFreelancerName ?? "Alle Freelancer",
+              sumNetEurLabel: formatEur(exportSumNetEur),
             }}
           />
         </div>
@@ -247,22 +281,28 @@ export default async function AdminFreelancerZeitenPage({
 
       <Card>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] font-body text-sm text-left border-collapse">
+          <table className="w-full min-w-[960px] font-body text-sm text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-200 text-gray-600">
                 <th className="py-2 pr-4 font-semibold">Name</th>
                 <th className="py-2 pr-4 font-semibold">Check-in</th>
                 <th className="py-2 pr-4 font-semibold">Check-out</th>
                 <th className="py-2 pr-4 font-semibold">Dauer (hh:MM)</th>
+                <th className="py-2 pr-4 font-semibold text-right">€/h (netto)</th>
+                <th className="py-2 pr-4 font-semibold text-right">Gesamt</th>
+                <th className="py-2 pr-4 font-semibold">Vorsteuer</th>
                 <th className="py-2 pl-2 font-semibold text-right">Aktionen</th>
               </tr>
             </thead>
             <tbody>
               {(rows as Row[] | null)?.length ? (
                 (rows as Row[]).map((r) => {
-                  const name = Array.isArray(r.freelancers)
-                    ? r.freelancers[0]?.name ?? "—"
-                    : r.freelancers?.name ?? "—";
+                  const fl = freelancerFromRow(r);
+                  const name = fl.name || "—";
+                  const hours = durationDecimalHours(r.check_in, r.check_out);
+                  const rate = hourlyRateFromDb(fl.hourly_rate_eur);
+                  const totalEur = hours !== null ? hours * rate : null;
+                  const vatDeduct = fl.input_vat_deductible !== false;
                   return (
                     <tr key={r.id} className="border-b border-gray-100 align-top">
                       <ZeitenRowActions
@@ -271,18 +311,34 @@ export default async function AdminFreelancerZeitenPage({
                         checkInIso={r.check_in}
                         checkOutIso={r.check_out}
                         nextUrl={nextUrl}
+                        hourlyRateLabel={`${formatEur(rate)}/h`}
+                        totalLabel={totalEur !== null ? formatEur(totalEur) : "—"}
+                        vatDeductibleLabel={vatDeduct ? "Ja" : "Nein"}
                       />
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-8 text-gray-500">
+                  <td colSpan={8} className="py-8 text-gray-500">
                     Keine Einträge im gewählten Zeitraum.
                   </td>
                 </tr>
               )}
             </tbody>
+            {(rows as Row[] | null)?.length ? (
+              <tfoot>
+                <tr className="border-t border-gray-200 bg-gray-50/80 font-medium text-orendt-black">
+                  <td colSpan={5} className="py-3 pr-4 text-right font-body text-sm">
+                    Summe (netto, abgeschlossene Zeiten)
+                  </td>
+                  <td className="py-3 pr-4 text-right tabular-nums font-semibold">
+                    {formatEur(exportSumNetEur)}
+                  </td>
+                  <td colSpan={2} className="py-3" />
+                </tr>
+              </tfoot>
+            ) : null}
           </table>
         </div>
       </Card>

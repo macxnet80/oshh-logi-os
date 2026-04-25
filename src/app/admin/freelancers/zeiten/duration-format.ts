@@ -17,3 +17,15 @@ export function formatDurationHhMm(
   const m = totalMin % 60;
   return `${String(h).padStart(2, "0")}:${pad2(m)}`;
 }
+
+/** Dauer in Dezimalstunden (z. B. 2,5 h) für Abrechnung. */
+export function durationDecimalHours(
+  checkIn: string,
+  checkOut: string | null
+): number | null {
+  if (!checkOut) return null;
+  const a = new Date(checkIn).getTime();
+  const b = new Date(checkOut).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b) || b < a) return null;
+  return (b - a) / 3_600_000;
+}

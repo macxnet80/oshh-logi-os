@@ -177,24 +177,30 @@ export type Database = {
       freelancers: {
         Row: {
           created_at: string
+          hourly_rate_eur: string | number
           id: string
+          input_vat_deductible: boolean
           is_active: boolean
           name: string
           pin: string
         }
         Insert: {
           created_at?: string
+          hourly_rate_eur?: string | number
           id?: string
+          input_vat_deductible?: boolean
           is_active?: boolean
           name: string
           pin: string
         }
         Update: {
           created_at?: string
+          hourly_rate_eur?: string | number
           id?: string
           is_active?: boolean
           name?: string
           pin?: string
+          input_vat_deductible?: boolean
         }
         Relationships: []
       }

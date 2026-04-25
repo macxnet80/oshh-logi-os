@@ -7,6 +7,8 @@ create table if not exists public.freelancers (
   name text not null,
   pin text not null unique,
   is_active boolean not null default true,
+  hourly_rate_eur numeric(12, 2) not null default 0,
+  input_vat_deductible boolean not null default true,
   created_at timestamptz not null default now()
 );
 

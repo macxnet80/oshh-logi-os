@@ -5,9 +5,11 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { createFreelancer } from "./actions";
 import FreelancerNameEditor from "./FreelancerNameEditor";
+import FreelancerBillingEditor from "./FreelancerBillingEditor";
 import FreelancerPinEditor from "./FreelancerPinEditor";
 import FreelancerQrPanel from "./FreelancerQrPanel";
 import FreelancerRowActions from "./FreelancerRowActions";
+import { loadFreelancersForAdmin } from "@/lib/freelancer-billing-query";
 
 type PageProps = {
   searchParams: Promise<{ ok?: string; err?: string }>;
@@ -23,6 +25,8 @@ const errMessages: Record<string, string> = {
   pin_failed: "PIN konnte nicht gespeichert werden.",
   delete_failed: "Löschen fehlgeschlagen.",
   invalid: "Ungültige Anfrage.",
+  rate_invalid: "Ungültiger Stundensatz (0 – 999.999,99 €).",
+  billing_failed: "Abrechnung konnte nicht gespeichert werden.",
 };
 
 const okMessages: Record<string, string> = {
@@ -31,16 +35,14 @@ const okMessages: Record<string, string> = {
   edited: "Name wurde gespeichert.",
   pin: "PIN wurde gespeichert.",
   deleted: "Freelancer wurde gelöscht.",
+  billing: "Abrechnung wurde gespeichert.",
 };
 
 export default async function AdminFreelancersPage({ searchParams }: PageProps) {
   const supabase = await createClient();
   const params = await searchParams;
 
-  const { data: freelancers, error } = await supabase
-    .from("freelancers")
-    .select("id, name, pin, is_active, created_at")
-    .order("name", { ascending: true });
+  const { rows: freelancers, error } = await loadFreelancersForAdmin(supabase);
 
   const errKey = params.err;
   const okKey = params.ok;
@@ -127,12 +129,37 @@ export default async function AdminFreelancersPage({ searchParams }: PageProps) 
               className="w-full font-mono tracking-widest"
             />
           </div>
+          <div className="w-full sm:w-32 shrink-0">
+            <label htmlFor="fl-rate" className="sr-only">
+              Stundensatz
+            </label>
+            <Input
+              id="fl-rate"
+              name="hourly_rate_eur"
+              type="text"
+              inputMode="decimal"
+              placeholder="€/h (netto)"
+              autoComplete="off"
+              className="w-full"
+            />
+          </div>
+          <label className="flex items-center gap-2 font-body text-sm text-orendt-black shrink-0 w-full sm:w-auto">
+            <input
+              type="checkbox"
+              name="input_vat_deductible"
+              value="on"
+              defaultChecked
+              className="rounded border-gray-300"
+            />
+            Vorsteuer
+          </label>
           <Button type="submit" size="md" className="shrink-0">
             Anlegen
           </Button>
         </form>
         <p className="font-body text-xs text-gray-500 mt-2">
-          Vierstellige PIN selbst vergeben (nur Ziffern). Sie muss eindeutig sein.
+          Vierstellige PIN selbst vergeben (nur Ziffern). Sie muss eindeutig sein. Stundensatz
+          und Vorsteuer kannst du pro Freelancer auch später ändern.
         </p>
       </Card>
 
@@ -146,6 +173,7 @@ export default async function AdminFreelancersPage({ searchParams }: PageProps) 
               <tr className="border-b border-gray-200 text-gray-600">
                 <th className="py-2 pr-4 font-semibold">Name</th>
                 <th className="py-2 pr-4 font-semibold">PIN</th>
+                <th className="py-2 pr-4 font-semibold">Stundensatz & Vorsteuer</th>
                 <th className="py-2 pr-4 font-semibold">Status</th>
                 <th className="py-2 pr-4 font-semibold text-right">Aktionen</th>
               </tr>
@@ -153,7 +181,7 @@ export default async function AdminFreelancersPage({ searchParams }: PageProps) 
             <tbody>
               {(freelancers ?? []).length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-6 text-gray-500">
+                  <td colSpan={5} className="py-6 text-gray-500">
                     Noch keine Freelancer angelegt.
                   </td>
                 </tr>
@@ -165,6 +193,13 @@ export default async function AdminFreelancersPage({ searchParams }: PageProps) 
                     </td>
                     <td className="py-3 pr-4 align-top">
                       <FreelancerPinEditor id={row.id} initialPin={row.pin} />
+                    </td>
+                    <td className="py-3 pr-4 align-top">
+                      <FreelancerBillingEditor
+                        id={row.id}
+                        initialHourlyRateEur={row.hourly_rate_eur}
+                        initialInputVatDeductible={row.input_vat_deductible ?? true}
+                      />
                     </td>
                     <td className="py-3 pr-4">
                       {row.is_active ? (
