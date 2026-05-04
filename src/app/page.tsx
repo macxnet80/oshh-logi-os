@@ -3,8 +3,7 @@ import { CalendarDays, Users, Clock, TrendingUp, BarChart3 } from "lucide-react"
 import Card from "@/components/ui/Card";
 import FlexibleBooking from "@/components/parking/FlexibleBooking";
 import PollVote from "@/components/polls/PollVote";
-import { createClientIfConfigured } from "@/lib/supabase/server";
-import { hasLogiAppAccess, isLogiPollCreator } from "@/lib/logi-app-access";
+import { getLogiSession } from "@/lib/auth/logi-session";
 import { getActiveLogiPollsForDashboard } from "@/lib/polls/load-active-polls";
 
 const stats = [
@@ -39,7 +38,13 @@ const stats = [
 ];
 
 export default async function DashboardPage() {
-  const supabase = await createClientIfConfigured();
+  const {
+    supabase,
+    user,
+    profileRole,
+    hasAppAccess,
+    canCreatePolls,
+  } = await getLogiSession();
 
   if (!supabase) {
     return (
@@ -54,29 +59,6 @@ export default async function DashboardPage() {
         </p>
       </div>
     );
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let hasAppAccess = false;
-  let profileRole: string | null = null;
-  let canCreatePolls = false;
-
-  if (user) {
-    const [{ data: access }, { data: profile }] = await Promise.all([
-      supabase
-        .from("logi_user_access")
-        .select("team, is_admin")
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
-    ]);
-
-    profileRole = profile?.role ?? null;
-    hasAppAccess = hasLogiAppAccess(access, profileRole);
-    canCreatePolls = isLogiPollCreator(access ?? null, profileRole);
   }
 
   const flexibleUserId =

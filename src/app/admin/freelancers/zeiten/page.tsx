@@ -5,14 +5,24 @@ import ZeitenExportButton, {
   type ZeitenExportRow,
 } from "./ZeitenExportButton";
 import ZeitenFreelancerFilter from "./ZeitenFreelancerFilter";
+import ZeitenDateRangePicker from "./ZeitenDateRangePicker";
 import ZeitenRowActions from "./ZeitenRowActions";
 import { durationDecimalHours, formatDurationHhMm } from "./duration-format";
 import { formatEur, hourlyRateFromDb } from "./money-format";
 import { loadFreelancerBillingMap } from "@/lib/freelancer-billing-query";
+import type { ZeitenRangePreset } from "./zeit-range-berlin";
+import {
+  getPresetIsoRange,
+  isValidZeitenRangePreset,
+  isoRangeInclusiveBerlinYmd,
+  ZEITEN_DATE_PARAM_RE,
+} from "./zeit-range-berlin";
 
 type PageProps = {
   searchParams: Promise<{
     range?: string;
+    from?: string;
+    to?: string;
     freelancer?: string;
     ok?: string;
     err?: string;
@@ -34,33 +44,57 @@ const okMessages: Record<string, string> = {
   zeiten_deleted: "Eintrag wurde gelöscht.",
 };
 
-function getRangeBounds(period: string): { from: string; to: string } {
-  const now = new Date();
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-  const start = new Date(now);
+function resolveQueryRange(searchParams: {
+  range?: string;
+  from?: string;
+  to?: string;
+}): {
+  range: ZeitenRangePreset;
+  fromIso: string;
+  toIso: string;
+  customFromYmd: string | undefined;
+  customToYmd: string | undefined;
+} {
+  const rf = searchParams.from?.trim() ?? "";
+  const rt = searchParams.to?.trim() ?? "";
+  const rr = searchParams.range?.trim() ?? "week";
 
-  if (period === "month") {
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
-  } else if (period === "week") {
-    const day = start.getDay();
-    const offset = day === 0 ? -6 : 1 - day;
-    start.setDate(start.getDate() + offset);
-    start.setHours(0, 0, 0, 0);
-  } else {
-    start.setDate(start.getDate() - 30);
-    start.setHours(0, 0, 0, 0);
+  if (
+    rr === "custom" &&
+    ZEITEN_DATE_PARAM_RE.test(rf) &&
+    ZEITEN_DATE_PARAM_RE.test(rt)
+  ) {
+    const r = isoRangeInclusiveBerlinYmd(rf, rt);
+    if (r) {
+      return {
+        range: "custom",
+        fromIso: r.from,
+        toIso: r.to,
+        customFromYmd: rf > rt ? rt : rf,
+        customToYmd: rf > rt ? rf : rt,
+      };
+    }
   }
 
-  return { from: start.toISOString(), to: end.toISOString() };
+  const presetRange: Exclude<ZeitenRangePreset, "custom"> =
+    isValidZeitenRangePreset(rr) ? rr : "week";
+  const { from: fromIso, to: toIso } = getPresetIsoRange(presetRange);
+  return {
+    range: presetRange,
+    fromIso,
+    toIso,
+    customFromYmd: undefined,
+    customToYmd: undefined,
+  };
 }
 
+/** SSR nutzt häufig UTC als Default-TZ — PDF/CSV sollen Deutschland-Zeit (Europe/Berlin) wie in der Oberfläche zeigen. */
 function formatDt(iso: string) {
   try {
     return new Intl.DateTimeFormat("de-DE", {
       dateStyle: "short",
       timeStyle: "short",
+      timeZone: "Europe/Berlin",
     }).format(new Date(iso));
   } catch {
     return iso;
@@ -71,12 +105,17 @@ export default async function AdminFreelancerZeitenPage({
   searchParams,
 }: PageProps) {
   const params = await searchParams;
-  const range = params.range === "month" || params.range === "30d" ? params.range : "week";
   const freelancerFilter = params.freelancer?.trim() || "";
   const okKey = params.ok;
   const errKey = params.err;
 
-  const { from, to } = getRangeBounds(range);
+  const {
+    range,
+    fromIso: from,
+    toIso: to,
+    customFromYmd,
+    customToYmd,
+  } = resolveQueryRange(params);
 
   const supabase = await createClient();
 
@@ -161,23 +200,36 @@ export default async function AdminFreelancerZeitenPage({
   }
 
   const base = "/admin/freelancers/zeiten";
-  const link = (r: string, f?: string) => {
+
+  /** Presets: ohne Datumsparameter. */
+  const presetLinkHref = (
+    preset: Exclude<ZeitenRangePreset, "custom">,
+    freelancer?: string
+  ) => {
     const u = new URLSearchParams();
-    u.set("range", r);
-    if (f) u.set("freelancer", f);
+    u.set("range", preset);
+    if (freelancer) u.set("freelancer", freelancer);
     const q = u.toString();
     return q ? `${base}?${q}` : base;
   };
 
   const rangeLabel =
-    range === "month"
-      ? "dieser Monat"
-      : range === "30d"
-        ? "letzte 30 Tage"
-        : "diese Woche";
+    range === "custom"
+      ? "eigener Zeitraum"
+      : range === "week"
+        ? "diese Woche"
+        : range === "last-week"
+          ? "letzte Woche"
+          : range === "month"
+            ? "dieser Monat"
+            : "letzter Monat";
 
   const nextParams = new URLSearchParams();
   nextParams.set("range", range);
+  if (range === "custom" && customFromYmd && customToYmd) {
+    nextParams.set("from", customFromYmd);
+    nextParams.set("to", customToYmd);
+  }
   if (freelancerFilter) nextParams.set("freelancer", freelancerFilter);
   const nextUrl = `${base}?${nextParams.toString()}`;
 
@@ -222,60 +274,83 @@ export default async function AdminFreelancerZeitenPage({
       ) : null}
 
       <Card className="space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-end gap-4 flex-wrap">
-          <div>
-            <p className="font-body text-xs font-medium text-gray-600 mb-2">
-              Zeitraum
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href={link("week", freelancerFilter || undefined)}
-                className={`px-3 py-1.5 rounded-lg font-body text-sm font-medium border ${
-                  range === "week"
-                    ? "bg-orendt-black text-white border-orendt-black"
-                    : "border-gray-200 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                Diese Woche
-              </Link>
-              <Link
-                href={link("month", freelancerFilter || undefined)}
-                className={`px-3 py-1.5 rounded-lg font-body text-sm font-medium border ${
-                  range === "month"
-                    ? "bg-orendt-black text-white border-orendt-black"
-                    : "border-gray-200 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                Dieser Monat
-              </Link>
-              <Link
-                href={link("30d", freelancerFilter || undefined)}
-                className={`px-3 py-1.5 rounded-lg font-body text-sm font-medium border ${
-                  range === "30d"
-                    ? "bg-orendt-black text-white border-orendt-black"
-                    : "border-gray-200 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                Letzte 30 Tage
-              </Link>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+            <div className="flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
+              <span className="font-body text-xs font-medium text-gray-600 shrink-0 pb-2">
+                Zeitraum
+              </span>
+              <div className="flex flex-wrap gap-2 items-end">
+                <Link
+                  href={presetLinkHref("week", freelancerFilter || undefined)}
+                  className={`px-3 py-1.5 rounded-lg font-body text-sm font-medium border ${
+                    range === "week"
+                      ? "bg-orendt-black text-white border-orendt-black"
+                      : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Diese Woche
+                </Link>
+                <Link
+                  href={presetLinkHref("last-week", freelancerFilter || undefined)}
+                  className={`px-3 py-1.5 rounded-lg font-body text-sm font-medium border ${
+                    range === "last-week"
+                      ? "bg-orendt-black text-white border-orendt-black"
+                      : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Letzte Woche
+                </Link>
+                <Link
+                  href={presetLinkHref("month", freelancerFilter || undefined)}
+                  className={`px-3 py-1.5 rounded-lg font-body text-sm font-medium border ${
+                    range === "month"
+                      ? "bg-orendt-black text-white border-orendt-black"
+                      : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Dieser Monat
+                </Link>
+                <Link
+                  href={presetLinkHref("last-month", freelancerFilter || undefined)}
+                  className={`px-3 py-1.5 rounded-lg font-body text-sm font-medium border ${
+                    range === "last-month"
+                      ? "bg-orendt-black text-white border-orendt-black"
+                      : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Letzter Monat
+                </Link>
+              </div>
             </div>
+
+            <ZeitenDateRangePicker
+              rangeMode={range}
+              initialFrom={customFromYmd}
+              initialTo={customToYmd}
+              freelancerId={freelancerFilter}
+            />
           </div>
 
-          <ZeitenFreelancerFilter
-            options={freelancerList ?? []}
-            range={range}
-            selectedId={freelancerFilter}
-          />
+          <div className="flex flex-col lg:flex-row lg:items-end gap-4 flex-wrap">
+            <ZeitenFreelancerFilter
+              options={freelancerList ?? []}
+              range={range}
+              fromParam={customFromYmd}
+              toParam={customToYmd}
+              selectedId={freelancerFilter}
+            />
 
-          <ZeitenExportButton
-            rows={exportRows}
-            meta={{
-              periodLabel: rangeLabel,
-              rangeText: `${formatDt(from)} – ${formatDt(to)}`,
-              freelancerScope: selectedFreelancerName ?? "Alle Freelancer",
-              sumNetEurLabel: formatEur(exportSumNetEur),
-            }}
-          />
+            <ZeitenExportButton
+              rows={exportRows}
+              meta={{
+                periodLabel: rangeLabel,
+                rangeText: `${formatDt(from)} – ${formatDt(to)}`,
+                freelancerScope: selectedFreelancerName ?? "Alle Freelancer",
+                sumNetEurLabel: formatEur(exportSumNetEur),
+              }}
+            />
+          </div>
         </div>
       </Card>
 
