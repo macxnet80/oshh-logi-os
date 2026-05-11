@@ -6,15 +6,15 @@
 
 @theme inline {
   /* Fonts */
-  --font-display: var(--font-sora);
-  --font-body: var(--font-instrument-sans);
+  --font-display: "Gotham Bold", "Gotham", "Avenir Next", "Helvetica Neue", sans-serif;
+  --font-body: "Gotham Book", "Gotham", "Avenir Next", "Helvetica Neue", sans-serif;
 
   /* Colors — Core */
   --color-orendt-black: #0A0A0A;
   --color-orendt-dark: #1A1A1A;
   --color-orendt-white: #FFFFFF;
-  --color-orendt-accent: #E8FF00;
-  --color-orendt-accent-hover: #D4EB00;
+  --color-orendt-accent: #DEB887;
+  --color-orendt-accent-hover: #CDA471;
 
   /* Colors — Gray Scale */
   --color-gray-50: #FAFAFA;

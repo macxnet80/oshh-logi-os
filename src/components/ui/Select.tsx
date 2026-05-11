@@ -29,7 +29,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             rounded-lg
             font-body text-base text-orendt-black
             transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-orendt-accent focus:border-transparent
+            focus:outline-none focus:ring-2 focus:ring-[#DEB887]/40 focus:border-[#DEB887]
             cursor-pointer
             ${error ? "border-status-occupied" : ""}
             ${className}

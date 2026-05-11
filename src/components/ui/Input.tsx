@@ -29,7 +29,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             font-body text-base text-orendt-black
             placeholder:text-gray-500
             transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-orendt-accent focus:border-transparent
+            focus:outline-none focus:ring-2 focus:ring-[#DEB887]/40 focus:border-[#DEB887]
             ${error ? "border-status-occupied" : ""}
             ${className}
           `}

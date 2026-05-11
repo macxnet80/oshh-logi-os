@@ -217,7 +217,7 @@ export default function Header({
             <Link
               href="/login"
               onClick={() => setOpen(false)}
-              className="flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl font-body text-sm font-semibold bg-orendt-black text-white hover:bg-orendt-accent hover:text-orendt-black transition-colors"
+              className="flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl font-body text-sm font-semibold bg-orendt-black text-white hover:opacity-90 transition-colors"
             >
               <LogIn className="w-4 h-4" />
               Anmelden

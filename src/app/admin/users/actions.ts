@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireLogiAdmin } from "@/lib/authz-server";
+import { runDailyHrSync } from "@/lib/hr-sync/sync";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { PROFILE_DISPLAY_NAME_MAX_LENGTH } from "./constants";
 
@@ -115,4 +116,17 @@ export async function updateLogiUserAccess(formData: FormData): Promise<void> {
 
   revalidatePath("/admin/users");
   redirect("/admin/users?ok=1");
+}
+
+export async function triggerManualHrSync(): Promise<void> {
+  await requireLogiAdmin();
+
+  try {
+    await runDailyHrSync({ triggeredBy: "manual", timezone: "Europe/Berlin" });
+    revalidatePath("/admin/users");
+    redirect("/admin/users?sync=ok");
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unbekannter Sync-Fehler";
+    redirect(`/admin/users?sync=err&err=${encodeURIComponent(message)}`);
+  }
 }

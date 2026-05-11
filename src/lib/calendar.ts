@@ -8,6 +8,40 @@ export function getDaysInMonth(year: number, month: number): Date[] {
   return days;
 }
 
+export function getStartOfWeek(date: Date): Date {
+  const start = new Date(date);
+  const day = start.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  start.setDate(start.getDate() + diffToMonday);
+  start.setHours(0, 0, 0, 0);
+  return start;
+}
+
+export function addDays(date: Date, amount: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + amount);
+  return result;
+}
+
+export function getWorkWeekDays(anchorDate: Date): Date[] {
+  const monday = getStartOfWeek(anchorDate);
+  return Array.from({ length: 5 }, (_, index) => addDays(monday, index));
+}
+
+export function getWorkWeekLabel(anchorDate: Date): string {
+  const days = getWorkWeekDays(anchorDate);
+  const firstDay = days[0];
+  const lastDay = days[days.length - 1];
+
+  const format = (date: Date) =>
+    date.toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "2-digit",
+    });
+
+  return `${format(firstDay)} – ${format(lastDay)}`;
+}
+
 export function formatDate(date: Date): string {
   return date.toISOString().split("T")[0];
 }

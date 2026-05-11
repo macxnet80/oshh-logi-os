@@ -66,7 +66,7 @@ function ParkingSpotBadge({
         className={[
           "font-display font-bold text-center break-words hyphens-auto",
           typo,
-          isReserved ? "text-orendt-accent" : "text-orendt-black",
+          isReserved ? "text-white" : "text-orendt-black",
         ].join(" ")}
       >
         {text}
@@ -273,11 +273,11 @@ export default function FlexibleBooking({ userId }: FlexibleBookingProps) {
           <button
             onClick={handleBook}
             disabled={booking}
-            className="w-full sm:w-auto px-12 py-5 bg-orendt-black text-orendt-accent font-display text-sm font-bold uppercase tracking-[0.2em] rounded-2xl hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 shadow-xl hover:shadow-2xl cursor-pointer"
+            className="w-full sm:w-auto px-12 py-5 bg-orendt-black text-white font-display text-sm font-bold uppercase tracking-[0.2em] rounded-2xl hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 shadow-xl hover:shadow-2xl cursor-pointer"
           >
             {booking ? (
               <div className="flex items-center justify-center gap-3">
-                <div className="w-4 h-4 border-2 border-orendt-accent/30 border-t-orendt-accent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 Wird gebucht...
               </div>
             ) : (

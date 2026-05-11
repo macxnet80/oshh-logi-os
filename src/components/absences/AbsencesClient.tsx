@@ -9,6 +9,7 @@ import AbsenceBadge from "@/components/absences/AbsenceBadge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { addAbsence } from "@/app/absences/actions";
+import { addDays, getStartOfWeek } from "@/lib/calendar";
 import type { Absence, AbsenceType, PlannerMember } from "@/lib/types";
 
 interface AbsencesClientProps {
@@ -28,36 +29,20 @@ export default function AbsencesClient({
 }: AbsencesClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  const [weekAnchorDate, setWeekAnchorDate] = useState(() => new Date());
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const handlePrevMonth = useCallback(() => {
-    setMonth((prev) => {
-      if (prev === 0) {
-        setYear((y) => y - 1);
-        return 11;
-      }
-      return prev - 1;
-    });
+  const handlePrevWeek = useCallback(() => {
+    setWeekAnchorDate((prev) => addDays(prev, -7));
   }, []);
 
-  const handleNextMonth = useCallback(() => {
-    setMonth((prev) => {
-      if (prev === 11) {
-        setYear((y) => y + 1);
-        return 0;
-      }
-      return prev + 1;
-    });
+  const handleNextWeek = useCallback(() => {
+    setWeekAnchorDate((prev) => addDays(prev, 7));
   }, []);
 
   const handleToday = useCallback(() => {
-    const today = new Date();
-    setYear(today.getFullYear());
-    setMonth(today.getMonth());
+    setWeekAnchorDate(new Date());
   }, []);
 
   const handleSubmit = useCallback(
@@ -142,12 +127,11 @@ export default function AbsencesClient({
         </Card>
       ) : (
         <AbsenceCalendar
-          year={year}
-          month={month}
+          weekStart={getStartOfWeek(weekAnchorDate)}
           teamMembers={teamMembers}
           absences={absences}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
+          onPrevWeek={handlePrevWeek}
+          onNextWeek={handleNextWeek}
           onToday={handleToday}
         />
       )}

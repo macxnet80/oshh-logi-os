@@ -82,7 +82,7 @@ export default function ZeitenDateRangePicker({
             setVon(v);
             maybeNavigate(v, bis);
           }}
-          className="px-3 py-2 rounded-lg border border-gray-200 font-body text-sm bg-white text-orendt-black focus:outline-none focus:ring-2 focus:ring-orendt-accent focus:border-transparent min-w-[10.25rem]"
+          className="px-3 py-2 rounded-lg border border-gray-200 font-body text-sm bg-white text-orendt-black focus:outline-none focus:ring-2 focus:ring-[#DEB887]/40 focus:border-[#DEB887] min-w-[10.25rem]"
         />
       </div>
       <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export default function ZeitenDateRangePicker({
             setBis(v);
             maybeNavigate(von, v);
           }}
-          className="px-3 py-2 rounded-lg border border-gray-200 font-body text-sm bg-white text-orendt-black focus:outline-none focus:ring-2 focus:ring-orendt-accent focus:border-transparent min-w-[10.25rem]"
+          className="px-3 py-2 rounded-lg border border-gray-200 font-body text-sm bg-white text-orendt-black focus:outline-none focus:ring-2 focus:ring-[#DEB887]/40 focus:border-[#DEB887] min-w-[10.25rem]"
         />
       </div>
     </div>

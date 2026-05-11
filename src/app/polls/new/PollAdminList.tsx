@@ -84,7 +84,7 @@ function PollEditForm({
           rows={5}
           defaultValue={poll.optionsText}
           disabled={updatePending}
-          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-body text-base text-orendt-black placeholder:text-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orendt-accent focus:border-transparent resize-y min-h-[120px] disabled:opacity-60 shadow-subtle"
+          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-body text-base text-orendt-black placeholder:text-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#DEB887]/40 focus:border-[#DEB887] resize-y min-h-[120px] disabled:opacity-60 shadow-subtle"
         />
         <p className="font-body text-xs text-gray-500">
           Geänderte oder entfernte Optionen können bestehende Stimmen „verwaisen“
@@ -195,7 +195,7 @@ function PollAdminRow({ poll }: { poll: AdminPollRow }) {
 
   if (editing) {
     return (
-      <Card className="border-gray-200 border-orendt-black/10 ring-1 ring-orendt-accent/25">
+      <Card className="border-gray-200 border-orendt-black/10 ring-1 ring-[#DEB887]/30">
         <PollEditForm
           poll={poll}
           onCancel={() => setEditing(false)}

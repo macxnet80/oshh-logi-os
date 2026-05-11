@@ -18,29 +18,41 @@ export type Database = {
         Row: {
           created_at: string | null
           end_date: string
+          external_absence_id: string | null
           id: string
           note: string | null
           profile_id: string
+          source: string
+          source_event_id: string | null
           start_date: string
           type: string
+          updated_at: string
         }
         Insert: {
           created_at?: string | null
           end_date: string
+          external_absence_id?: string | null
           id?: string
           note?: string | null
           profile_id: string
+          source?: string
+          source_event_id?: string | null
           start_date: string
           type: string
+          updated_at?: string
         }
         Update: {
           created_at?: string | null
           end_date?: string
+          external_absence_id?: string | null
           id?: string
           note?: string | null
           profile_id?: string
+          source?: string
+          source_event_id?: string | null
           start_date?: string
           type?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -201,6 +213,92 @@ export type Database = {
           name?: string
           pin?: string
           input_vat_deductible?: boolean
+        }
+        Relationships: []
+      }
+      hr_identity_mappings: {
+        Row: {
+          created_at: string
+          email_normalized: string
+          external_person_id: string
+          id: string
+          last_synced_at: string | null
+          profile_id: string | null
+          provider: string
+          sync_status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_normalized: string
+          external_person_id: string
+          id?: string
+          last_synced_at?: string | null
+          profile_id?: string | null
+          provider: string
+          sync_status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_normalized?: string
+          external_person_id?: string
+          id?: string
+          last_synced_at?: string | null
+          profile_id?: string | null
+          provider?: string
+          sync_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_identity_mappings_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_sync_runs: {
+        Row: {
+          counts: Json
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          provider: string
+          started_at: string
+          status: string
+          timezone: string
+          triggered_by: string
+          window_end: string | null
+          window_start: string | null
+        }
+        Insert: {
+          counts?: Json
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          provider: string
+          started_at?: string
+          status: string
+          timezone?: string
+          triggered_by?: string
+          window_end?: string | null
+          window_start?: string | null
+        }
+        Update: {
+          counts?: Json
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          provider?: string
+          started_at?: string
+          status?: string
+          timezone?: string
+          triggered_by?: string
+          window_end?: string | null
+          window_start?: string | null
         }
         Relationships: []
       }

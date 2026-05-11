@@ -3,36 +3,37 @@
 import { useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  getDaysInMonth,
+  addDays,
+  getWorkWeekLabel,
   formatDate,
-  isWeekend,
   isToday,
   isDateInRange,
-  getMonthName,
   getDayNameShort,
 } from "@/lib/calendar";
 import { ABSENCE_CONFIG, type PlannerMember, type Absence } from "@/lib/types";
 
 interface AbsenceCalendarProps {
-  year: number;
-  month: number;
+  weekStart: Date;
   teamMembers: PlannerMember[];
   absences: Absence[];
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
+  onPrevWeek: () => void;
+  onNextWeek: () => void;
   onToday: () => void;
 }
 
 export default function AbsenceCalendar({
-  year,
-  month,
+  weekStart,
   teamMembers,
   absences,
-  onPrevMonth,
-  onNextMonth,
+  onPrevWeek,
+  onNextWeek,
   onToday,
 }: AbsenceCalendarProps) {
-  const days = useMemo(() => getDaysInMonth(year, month), [year, month]);
+  const days = useMemo(
+    () => Array.from({ length: 5 }, (_, index) => addDays(weekStart, index)),
+    [weekStart]
+  );
+  const weekLabel = useMemo(() => getWorkWeekLabel(weekStart), [weekStart]);
 
   // Build a lookup: profileId -> date -> absenceType
   const absenceMap = useMemo(() => {
@@ -57,19 +58,19 @@ export default function AbsenceCalendar({
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <button
-            onClick={onPrevMonth}
+            onClick={onPrevWeek}
             className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors cursor-pointer"
-            aria-label="Vorheriger Monat"
+            aria-label="Vorherige Woche"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <h2 className="font-display text-lg font-semibold text-orendt-black min-w-[180px] text-center">
-            {getMonthName(month)} {year}
+            {weekLabel}
           </h2>
           <button
-            onClick={onNextMonth}
+            onClick={onNextWeek}
             className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors cursor-pointer"
-            aria-label="Nächster Monat"
+            aria-label="Nächste Woche"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -84,22 +85,27 @@ export default function AbsenceCalendar({
 
       {/* Calendar Grid */}
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-[800px]">
+        <table className="w-full border-collapse table-fixed">
+          <colgroup>
+            <col className="w-[30%]" />
+            {days.map((day) => (
+              <col key={`col-${formatDate(day)}`} className="w-[14%]" />
+            ))}
+          </colgroup>
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-gray-50 px-4 py-2 text-left font-body text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[200px] max-w-[200px]">
+              <th className="sticky left-0 z-10 bg-gray-50 px-4 py-2 text-left font-body text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap">
                 Mitarbeiter
               </th>
               {days.map((day) => {
-                const weekend = isWeekend(day);
                 const today = isToday(day);
                 return (
                   <th
                     key={formatDate(day)}
                     className={`
-                      px-0 py-2 text-center border-b border-gray-200 min-w-[36px]
-                      ${weekend ? "bg-gray-100" : "bg-gray-50"}
-                      ${today ? "bg-orendt-accent/10" : ""}
+                      px-0 py-2 text-center border-b border-gray-200
+                      bg-gray-50
+                      ${today ? "bg-[#DEB887]/28" : ""}
                     `}
                   >
                     <div className="font-body text-[10px] text-gray-400">
@@ -108,11 +114,14 @@ export default function AbsenceCalendar({
                     <div
                       className={`
                         font-display text-xs font-medium
-                        ${today ? "text-orendt-black font-bold" : weekend ? "text-gray-400" : "text-gray-600"}
+                        ${today ? "text-orendt-black font-bold" : "text-gray-600"}
                       `}
                     >
                       {day.getDate()}
                     </div>
+                    {today ? (
+                      <div className="mx-auto mt-1 h-1 w-1 rounded-full bg-orendt-black" />
+                    ) : null}
                   </th>
                 );
               })}
@@ -121,7 +130,7 @@ export default function AbsenceCalendar({
           <tbody>
             {teamMembers.map((member) => (
               <tr key={member.id} className="group">
-                <td className="sticky left-0 z-10 bg-white px-4 py-2 border-b border-gray-100 group-hover:bg-gray-50 transition-colors max-w-[200px] overflow-hidden">
+                <td className="sticky left-0 z-10 bg-white px-4 py-2 border-b border-gray-100 group-hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-7 h-7 shrink-0 rounded-full bg-gray-200 flex items-center justify-center">
                       <span className="font-display text-xs font-semibold text-gray-600">
@@ -141,7 +150,6 @@ export default function AbsenceCalendar({
                 {days.map((day) => {
                   const dateStr = formatDate(day);
                   const absence = absenceMap[member.id]?.[dateStr];
-                  const weekend = isWeekend(day);
                   const today = isToday(day);
 
                   return (
@@ -149,8 +157,7 @@ export default function AbsenceCalendar({
                       key={dateStr}
                       className={`
                         px-0.5 py-1 border-b border-gray-100 text-center
-                        ${weekend ? "bg-gray-50" : ""}
-                        ${today ? "bg-orendt-accent/5" : ""}
+                        ${today ? "bg-[#DEB887]/16" : ""}
                       `}
                     >
                       {absence && (

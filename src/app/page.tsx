@@ -179,7 +179,7 @@ export default async function DashboardPage() {
             </div>
             <Link
               href="/absences"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-orendt-black text-white font-body font-semibold text-sm rounded-lg hover:bg-orendt-accent hover:text-orendt-black transition-all duration-200"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-orendt-black text-white font-body font-semibold text-sm rounded-lg hover:opacity-90 transition-all duration-200"
             >
               <CalendarDays className="w-4 h-4" />
               Zum Planer
@@ -199,7 +199,7 @@ export default async function DashboardPage() {
               </div>
               <Link
                 href="/polls/new"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-orendt-black text-white font-body font-semibold text-sm rounded-lg hover:bg-orendt-accent hover:text-orendt-black transition-all duration-200"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-orendt-black text-white font-body font-semibold text-sm rounded-lg hover:opacity-90 transition-all duration-200"
               >
                 <BarChart3 className="w-4 h-4" />
                 Öffnen

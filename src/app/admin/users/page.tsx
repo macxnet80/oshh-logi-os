@@ -5,9 +5,19 @@ import type { User } from "@supabase/supabase-js";
 import AdminUsersTable from "./AdminUsersTable";
 import Card from "@/components/ui/Card";
 import { PROFILE_DISPLAY_NAME_MAX_LENGTH } from "./constants";
+import { triggerManualHrSync } from "./actions";
 
 type PageProps = {
-  searchParams: Promise<{ ok?: string; err?: string }>;
+  searchParams: Promise<{ ok?: string; err?: string; sync?: string }>;
+};
+
+type HrSyncStatus = {
+  provider: string;
+  status: string;
+  started_at: string;
+  finished_at: string | null;
+  counts: Record<string, number> | null;
+  error_message: string | null;
 };
 
 export default async function AdminUsersPage({ searchParams }: PageProps) {
@@ -17,6 +27,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   let users: User[] = [];
   let accessRows: LogiUserAccessRow[] = [];
   const fullNameByUserId = new Map<string, string>();
+  let latestHrSync: HrSyncStatus | null = null;
+  let unmatchedHrMappings = 0;
   let loadError: string | null = null;
 
   try {
@@ -40,9 +52,21 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     const [
       { data: accessData, error: accessError },
       { data: profilesData, error: profilesError },
+      { data: syncData, error: syncError },
+      { count: unmatchedCount, error: unmatchedError },
     ] = await Promise.all([
       service.from("logi_user_access").select("*"),
       service.from("profiles").select("id, full_name"),
+      service
+        .from("hr_sync_runs")
+        .select("provider,status,started_at,finished_at,counts,error_message")
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      service
+        .from("hr_identity_mappings")
+        .select("*", { count: "exact", head: true })
+        .eq("sync_status", "unmatched"),
     ]);
 
     if (accessError) {
@@ -54,6 +78,15 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     if (profilesError && !loadError) {
       loadError = profilesError.message;
     }
+    if (syncError && !loadError) {
+      loadError = syncError.message;
+    }
+    if (unmatchedError && !loadError) {
+      loadError = unmatchedError.message;
+    }
+
+    latestHrSync = (syncData as HrSyncStatus | null) ?? null;
+    unmatchedHrMappings = unmatchedCount ?? 0;
 
     for (const p of profilesData ?? []) {
       if (p.id && p.full_name) {
@@ -112,6 +145,11 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                   : params.err}
           </p>
         ) : null}
+        {params.sync === "ok" ? (
+          <p className="mt-2 font-body text-sm text-status-free" role="status">
+            Manueller HR-Abgleich erfolgreich gestartet und abgeschlossen.
+          </p>
+        ) : null}
         <p className="font-body text-gray-600 mt-1 max-w-2xl">
           <strong className="text-orendt-black">Name</strong> kannst du hier
           anpassen (wird in{" "}
@@ -123,7 +161,46 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
           <code className="text-xs bg-gray-100 px-1 rounded">profiles.role</code>
           ).
         </p>
+        <div className="mt-4">
+          <form action={triggerManualHrSync}>
+            <button
+              type="submit"
+              className="inline-flex items-center rounded-lg bg-orendt-black px-3 py-2 font-body text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#DEB887]/40 cursor-pointer"
+            >
+              Manuellen HR-Abgleich starten
+            </button>
+          </form>
+        </div>
       </div>
+
+      <Card className="p-5">
+        <h2 className="font-display text-lg font-semibold text-orendt-black">
+          Letzter HR-Abgleich
+        </h2>
+        {latestHrSync ? (
+          <>
+            <p className="mt-1 font-body text-sm text-gray-700">
+              Letzter Lauf: {new Date(latestHrSync.started_at).toLocaleString("de-DE")} (
+              {latestHrSync.provider}) - Status:{" "}
+              <strong className="text-orendt-black">{latestHrSync.status}</strong>
+            </p>
+            <p className="mt-1 font-body text-sm text-gray-700">
+              Gematcht: {latestHrSync.counts?.employees_matched ?? 0}, Unmatched:{" "}
+              {unmatchedHrMappings}, Abwesenheiten synchronisiert:{" "}
+              {latestHrSync.counts?.absences_synced ?? 0}
+            </p>
+            {latestHrSync.error_message ? (
+              <p className="mt-2 font-body text-sm text-status-occupied">
+                Letzter Fehler: {latestHrSync.error_message}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="mt-1 font-body text-sm text-gray-700">
+            Es wurde bisher noch kein HR-Abgleich ausgeführt.
+          </p>
+        )}
+      </Card>
 
       {loadError ? (
         <Card className="p-6 border-status-occupied-bg bg-status-occupied-bg/30">

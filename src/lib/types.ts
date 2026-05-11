@@ -45,8 +45,8 @@ export const ABSENCE_CONFIG: Record<
 > = {
   vacation: {
     label: "Urlaub",
-    color: "#E8FF00",
-    bgColor: "rgba(232, 255, 0, 0.15)",
+    color: "#DEB887",
+    bgColor: "rgba(222, 184, 135, 0.2)",
     icon: "Palmtree",
   },
   day_off: {

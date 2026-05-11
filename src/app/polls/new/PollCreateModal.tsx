@@ -122,7 +122,7 @@ function PollCreateModalDialog({ onClose }: { onClose: () => void }) {
               rows={5}
               placeholder={"Montag\nDienstag\nMittwoch"}
               disabled={pending}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-body text-base text-orendt-black placeholder:text-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orendt-accent focus:border-transparent resize-y min-h-[120px] disabled:opacity-60 shadow-subtle"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-body text-base text-orendt-black placeholder:text-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#DEB887]/40 focus:border-[#DEB887] resize-y min-h-[120px] disabled:opacity-60 shadow-subtle"
             />
             <p className="font-body text-xs text-gray-500">
               Mindestens 2 Optionen, maximal 20 — jede Option nur einmal.

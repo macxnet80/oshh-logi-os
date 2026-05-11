@@ -74,11 +74,11 @@ export default function AdminUsersTable({
                       maxLength={PROFILE_DISPLAY_NAME_MAX_LENGTH}
                       placeholder="Vor- und Nachname"
                       autoComplete="name"
-                      className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 font-body text-sm text-orendt-black placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orendt-accent"
+                      className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 font-body text-sm text-orendt-black placeholder:text-gray-400 focus:border-[#DEB887] focus:outline-none focus:ring-2 focus:ring-[#DEB887]/40"
                     />
                     <button
                       type="submit"
-                      className="shrink-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 font-body text-xs font-medium text-orendt-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-orendt-accent cursor-pointer"
+                      className="shrink-0 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 font-body text-xs font-medium text-orendt-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#DEB887]/40 cursor-pointer"
                     >
                       Speichern
                     </button>
@@ -98,7 +98,7 @@ export default function AdminUsersTable({
                         name="team_logistik"
                         value="true"
                         defaultChecked={isLogistik}
-                        className="h-4 w-4 rounded border-gray-300 text-orendt-black focus:ring-orendt-accent cursor-pointer"
+                        className="h-4 w-4 rounded border-gray-300 text-orendt-black focus:ring-[#DEB887]/40 cursor-pointer"
                         onChange={(e) => {
                           e.currentTarget.form?.requestSubmit();
                         }}
